@@ -103,7 +103,7 @@ else:
 
 Crew, borgs, and later aliens are **entities** with tags (`&"organic_human"`, `&"crew"`, `&"borg"`, `&"traitor"`; the traitor tag is hidden from the player). Definitions test tags, so the law system never needs to know about specific classes.
 
-## Rendering: 3D as pixel art 📋
+## Rendering: 3D as pixel art 🚧 (first pass, untested)
 
 See `DECISIONS.md` D-004 and D-006.
 
@@ -120,7 +120,8 @@ Main (Node)
 - **One render camera.** "Switching feeds" moves `FeedCamera` to a feed's transform and zoom. Feeds themselves are just data/markers: `StationCamera` nodes in rooms, plus a mount point on each borg.
 - **Static cut:** a short shader overlay on `PixelView` during switches. A broken feed shows static.
 - **Pixel snapping (borg feeds only):** a moving ortho camera shimmers. Fix: snap the camera's position to the size of one screen pixel in camera space, and apply the leftover sub-pixel offset by shifting `PixelView` by whole/fractional *window* pixels. Station camera feeds don't move, so they don't need it.
-- **UI is drawn outside the SubViewport,** so text and panels stay sharp at full resolution.
+- **UI is drawn outside the SubViewport,** so text and panels stay sharp at full resolution. The window uses stretch mode `canvas_items` with integer scaling (D-008): the UI is laid out on a 640×360 grid but text renders at full window resolution.
+- **Built so far (M1 test version):** `scenes/main/main.gd` builds this tree in code. `scenes/feeds/feed_camera.gd` (`FeedCamera`) does fixed and borg-follow views, using `scripts/util/pixel_snap.gd` (`PixelSnap`, tested in `tests/test_pixel_snap.gd`). `scenes/feeds/static_overlay.gd` is the static cut (a small inline shader). `scenes/ui/hud.gd` is placeholder text: feed name, clock, feed list, help, FPS. The sub-pixel container offset described above isn't done yet: borg feeds currently move in whole-pixel steps.
 - **Lighting:**
   - Station feeds: `DirectionalLight3D` + room `OmniLight3D`s. Only a few lights cast shadows. Static rooms can use `LightmapGI` later for quality.
   - Borg feeds: the borg carries a `SpotLight3D` headlamp. Areas outside its light are dark.
@@ -128,12 +129,19 @@ Main (Node)
 - **Cut-away walls:** walls facing the camera are hidden or lowered for the current feed so the room reads like a dollhouse.
 - **Performance:** only what the current feed sees is drawn. The simulation keeps running for the whole station.
 
-## Station 📋
+## Station 🚧 (M1 test version: hard-coded, untested)
+- **Now:** `scenes/station/station.gd` (`Station`) builds two 5×5 rooms (Engineering, Medbay) joined by a door at x = 5, one `StationCamera` per room, 3 crew and a borg. It owns all lighting through one function (`_apply_lighting`: normal / red alert / dark borg view), the per-feed **cut-away** (walls record which room they're the "front" of and get scaled down for that room's feed), borg walkability, and the F4 stress grid (49 rooms × 3 crew, lights without shadows). `scenes/station/room_builder.gd` (`RoomBuilder`) makes floors and walls. Rooms move to data files in M4.
+- **Crew movement (D-009):** straight-line walking between waypoints, no navmesh: random spot → door side → other door side → spot. They wait at a closed door and give up after 6 s. `scenes/actors/crew_member.gd`.
+- **Devices:** `scenes/devices/door.gd` (`Door`: sliding panels, status light, click collider on physics layer 2 found by a raycast in `main.gd`), `scenes/devices/station_camera.gd` (`StationCamera`: a feed marker with a small model).
+- **Borg:** `scenes/actors/borg.gd` (`Borg`): headlamp, WASD relative to the screen while its feed is shown.
+
+Planned:
 - 3D grid of 1 m cells (D-005). A **room builder** creates floors, walls and doors from simple room data (`data/rooms/` later), using models from `scripts/models/`.
 - Rooms are named areas, and each knows its cameras, devices, lights and occupants.
 - Crew pathing: `NavigationRegion3D` baked from the floors, or A* on the cell grid. Pick the simplest that works and record it in `DECISIONS.md`.
 
-## Models 📋
+## Models 🚧
+- Built: `scripts/models/box_builder.gd` (`BoxBuilder`: boxes with cached materials, plus glowing boxes), `crew_model.gd` (`CrewModel`, swinging arms/legs), `borg_model.gd` (`BorgModel`). The door builds its own boxes in `door.gd`.
 - Built from boxes in code (D-007): `scripts/models/crew_model.gd`, `borg_model.gd`, `door_model.gd`...
 - Each model takes colors/variants as parameters (job colors, borg module). Walk cycles are simple limb offsets, like the art test (`tools/blender/render3d_lit.py`).
 - Materials: `StandardMaterial3D`, rough, no textures. Emissive materials for screens and lamps.

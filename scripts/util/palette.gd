@@ -21,6 +21,12 @@ const DOOR_PANEL := Color("db5a14")
 const HAZARD_STRIPE := Color("f2c12e")
 const CONSOLE := Color("4b525d")
 const SCREEN_GLOW := Color("3ddc84")
+const DOOR_FRAME := Color("23262c")
+const BED := Color("d0d7de")
+const BED_SHEET := Color("4493f8")
+const CAMERA_BODY := Color("2b2f36")
+const CAMERA_LENS := Color("f85149")
+const LAMP := Color("ffe0b0")
 
 # --- Door status light ---
 const DOOR_OPEN := Color("3ddc84")
@@ -36,13 +42,18 @@ const JOB_COMMAND := Color("2b6e3a")
 const JOB_SCIENCE := Color("8957e5")
 const SKIN := Color("e8b38c")
 const HAIR := Color("4a3024")
+const EYES := Color("08090b")
 const BOOTS := Color("1c1c22")
 
 # --- Borg module colors ---
 const BORG_SECURITY := Color("da3633")
 const BORG_MEDICAL := Color("4493f8")
 const BORG_ENGINEERING := Color("e3b341")
+const BORG_BODY := Color("6e7681")
+const BORG_TRACKS := Color("1c1c22")
 
 # --- Light presets ---
 const LIGHT_NORMAL := Color("ffe0b0")
 const LIGHT_ALERT := Color("ff2a1a")
+const LIGHT_SUN := Color("9fb4d8")      # cool fill light through the station windows
+const AMBIENT := Color("3a4558")

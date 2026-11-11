@@ -38,6 +38,18 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 **Decision:** for now, models are built from simple boxes in GDScript (`scripts/models/`). Blender can come later for more detailed models, exported as `.glb` into `assets/models/`.
 **Why:** no external tools needed, and Claude can change any model instantly. The art test's Blender scripts are kept in `tools/blender/` for reference.
 
+### D-008: Stretch mode `canvas_items` instead of `viewport` (2026-11-11)
+**Decision:** `project.godot` uses `window/stretch/mode="canvas_items"` (still integer scale, 640×360 base). The 3D world renders into its own 640×360 SubViewport with nearest filtering.
+**Why:** with `viewport` mode the whole window, UI included, would be rendered at 640×360, so text would be blurry or blocky. ARCHITECTURE.md wants the UI crisp at full resolution. `canvas_items` keeps the 640×360 layout grid but draws text at window resolution, while the SubViewport keeps the pixel-art 3D.
+
+### D-009: Crew walk between waypoints, no navmesh yet (2026-11-11)
+**Decision:** for M1, crew walk in straight lines between waypoints (room spot → door → room spot) and wait at closed doors.
+**Why:** two box rooms don't need pathfinding. The simplest thing that works. Revisit in M4 when stations come from data (A* on the cell grid is the likely next step).
+
+### D-010: Keys are read directly, not through the Input Map (2026-11-11)
+**Decision:** M1 test controls (1–9, R, WASD, F3, F4) check physical key codes in code.
+**Why:** faster to iterate for a technical test. Move them into the Input Map (rebindable) when real controls are designed.
+
 ---
 
 ## Environment
