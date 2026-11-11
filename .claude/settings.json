@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(godot:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git init:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)"
+    ],
+    "deny": [
+      "Edit(.godot/**)",
+      "Write(.godot/**)"
+    ]
+  }
+}

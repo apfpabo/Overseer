@@ -1,0 +1,25 @@
+# Godot generated cache - never commit
+.godot/
+/android/
+
+# Exports / builds
+/build/
+/export/
+*.pck
+*.exe
+*.x86_64
+*.dmg
+
+# Mono (not used, but harmless)
+.mono/
+data_*/
+mono_crash.*.json
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.tmp
+.vscode/
+
+# Claude Code personal settings
+.claude/settings.local.json
