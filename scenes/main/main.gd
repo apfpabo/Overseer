@@ -76,17 +76,20 @@ func _on_key(keycode: Key) -> void:
 func _build_pixel_view() -> void:
 	var pixel_view := SubViewportContainer.new()
 	pixel_view.name = "PixelView"
-	pixel_view.stretch = true
+	# No stretch: with the window's canvas_items scaling, a stretched SubViewport
+	# would render at full window resolution and lose the pixel look. A fixed
+	# 640x360 render, drawn with nearest filtering, gives chunky pixels.
+	pixel_view.stretch = false
 	pixel_view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	pixel_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(pixel_view)
 	pixel_view.position = Vector2.ZERO
-	# With stretch on, the SubViewport takes this size: 640x360 render pixels.
 	pixel_view.size = Vector2(PIXEL_SIZE)
 
 	var viewport := SubViewport.new()
 	viewport.name = "SubViewport"
 	viewport.own_world_3d = true
+	viewport.size = PIXEL_SIZE
 	viewport.msaa_3d = Viewport.MSAA_DISABLED
 	pixel_view.add_child(viewport)
 

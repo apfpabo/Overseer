@@ -16,7 +16,7 @@
 - [ ] M1.7 Borg feed: one borg with a headlamp. Its feed follows it with **pixel snapping** (no shimmer), and WASD drives it (possession).
 - [ ] M1.8 Performance test: a debug key spawns 50 rooms with crew. An FPS counter is shown. The owner reports FPS on their PC.
 
-> 🧪 **2026-11-11: all of M1.1–M1.8 built in one go as a "test version"** at the owner's request (instead of one step at a time). Nothing is ticked yet: each box gets ticked once the owner has tried it in Godot. It was written in a cloud session **without running Godot**, so expect a first round of fixes.
+> 🧪 **2026-11-11: all of M1.1–M1.8 built in one go as a "test version"** at the owner's request (instead of one step at a time). Nothing is ticked yet: each box gets ticked once the owner has tried it in Godot. It was written in a cloud session; it has since been run headless and screenshotted with a software renderer, but not yet on the owner's PC.
 
 **Done when:** the owner likes how it looks, switching feeds feels good, the borg view doesn't shimmer, and FPS is comfortable (60+) in the stress test.
 
@@ -48,3 +48,4 @@ Add one short entry per session: date, what got done, anything left half-done.
 
 - **2026-11-11:** Project created: skeleton, docs, Claude Code config. Art direction chosen: real-time low-poly 3D as pixel art, seen through camera and borg feeds. Next: M1.1.
 - **2026-11-11 (later):** Owner asked for a test version. Built a first pass of all of M1 (pixel view, two rooms + door, camera feeds with static cut, 3 crew, red alert, possessable borg with pixel snapping, F3 FPS / F4 stress test). Scripts pass a GDScript syntax check, but Godot itself couldn't be run in that session, so **nothing has been run yet**. Next: owner presses F5, reports what they see and pastes any red errors. Fix those, then tick M1 tasks one by one.
+- **2026-11-11 (later still):** Got Godot 4.6.2 running in the cloud session. Import check clean, tests pass, a scripted run used every control with no errors (door click, feeds, red alert, borg driving through the door, crew crossing rooms, stress test). Screenshots (software OpenGL) showed and fixed: 3D wasn't actually pixelated, washed-out glow colors (now linear tonemap), clipped feed list. Added the 1-pixel outline on everything (owner request). Exported `build/CUSTODIAN.exe` for Windows. Still not seen on the owner's real GPU (Forward+/Vulkan).

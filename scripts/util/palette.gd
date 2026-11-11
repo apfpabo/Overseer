@@ -11,6 +11,9 @@ const AI_OK := Color("3ddc84")       # loyal / healthy UI accent
 const AI_WARN := Color("e3b341")
 const AI_ROGUE := Color("f85149")    # subverted / lawless UI accent
 
+# --- Rendering ---
+const OUTLINE := Color("120e1a")     # 1-pixel outline around everything (art test sprite outline)
+
 # --- Station surfaces ---
 const FLOOR_A := Color("3a3f47")
 const FLOOR_B := Color("33373e")

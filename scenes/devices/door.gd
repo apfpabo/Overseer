@@ -61,7 +61,7 @@ func _build() -> void:
 	for side: float in [-1.0, 1.0]:
 		BoxBuilder.box(self, Vector3(0.1, HEIGHT + 0.1, 0.26), Vector3(side * (WIDTH * 0.5 + 0.05), (HEIGHT + 0.1) * 0.5, 0.0), Palette.DOOR_FRAME)
 	BoxBuilder.box(self, Vector3(WIDTH + 0.2, 0.1, 0.26), Vector3(0.0, HEIGHT + 0.05, 0.0), Palette.DOOR_FRAME)
-	_status_light = BoxBuilder.glow_box(self, Vector3(0.22, 0.08, 0.3), Vector3(0.0, HEIGHT + 0.14, 0.0), Palette.DOOR_CLOSED, 3.0)
+	_status_light = BoxBuilder.glow_box(self, Vector3(0.22, 0.08, 0.3), Vector3(0.0, HEIGHT + 0.14, 0.0), Palette.DOOR_CLOSED, 1.0)
 
 	var body := StaticBody3D.new()
 	body.collision_layer = CLICK_LAYER

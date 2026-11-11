@@ -45,7 +45,7 @@ func set_feeds(names: Array[String], current: int) -> void:
 		lines.append("%s [%d] %s" % [marker, i + 1, names[i]])
 	_feed_list.text = "\n".join(lines)
 	# Keep the list anchored to the bottom whatever its length.
-	_feed_list.position.y = 352.0 - 10.0 * names.size()
+	_feed_list.position.y = 354.0 - _feed_list.get_line_height() * names.size()
 
 
 func set_red_alert(enabled: bool) -> void:

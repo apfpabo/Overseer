@@ -103,7 +103,7 @@ else:
 
 Crew, borgs, and later aliens are **entities** with tags (`&"organic_human"`, `&"crew"`, `&"borg"`, `&"traitor"`; the traitor tag is hidden from the player). Definitions test tags, so the law system never needs to know about specific classes.
 
-## Rendering: 3D as pixel art 🚧 (first pass, untested)
+## Rendering: 3D as pixel art 🚧 (first pass, checked headless and with a software renderer)
 
 See `DECISIONS.md` D-004 and D-006.
 
@@ -120,8 +120,8 @@ Main (Node)
 - **One render camera.** "Switching feeds" moves `FeedCamera` to a feed's transform and zoom. Feeds themselves are just data/markers: `StationCamera` nodes in rooms, plus a mount point on each borg.
 - **Static cut:** a short shader overlay on `PixelView` during switches. A broken feed shows static.
 - **Pixel snapping (borg feeds only):** a moving ortho camera shimmers. Fix: snap the camera's position to the size of one screen pixel in camera space, and apply the leftover sub-pixel offset by shifting `PixelView` by whole/fractional *window* pixels. Station camera feeds don't move, so they don't need it.
-- **UI is drawn outside the SubViewport,** so text and panels stay sharp at full resolution. The window uses stretch mode `canvas_items` with integer scaling (D-008): the UI is laid out on a 640×360 grid but text renders at full window resolution.
-- **Built so far (M1 test version):** `scenes/main/main.gd` builds this tree in code. `scenes/feeds/feed_camera.gd` (`FeedCamera`) does fixed and borg-follow views, using `scripts/util/pixel_snap.gd` (`PixelSnap`, tested in `tests/test_pixel_snap.gd`). `scenes/feeds/static_overlay.gd` is the static cut (a small inline shader). `scenes/ui/hud.gd` is placeholder text: feed name, clock, feed list, help, FPS. The sub-pixel container offset described above isn't done yet: borg feeds currently move in whole-pixel steps.
+- **UI is drawn outside the SubViewport,** so text and panels stay sharp at full resolution. The window uses stretch mode `canvas_items` with integer scaling (D-008): the UI is laid out on a 640×360 grid but text renders at full window resolution. The `SubViewportContainer` must keep `stretch = false` with a fixed 640×360 SubViewport, or the 3D renders at full window size and the pixel look disappears.
+- **Built so far (M1 test version):** `scenes/main/main.gd` builds this tree in code. `scenes/feeds/feed_camera.gd` (`FeedCamera`) does fixed and borg-follow views, using `scripts/util/pixel_snap.gd` (`PixelSnap`, tested in `tests/test_pixel_snap.gd`). `scenes/feeds/outline_pass.gd` (`OutlinePass`, child of the feed camera) draws the 1-pixel dark outline around everything (D-012). `scenes/feeds/static_overlay.gd` is the static cut (a small inline shader). `scenes/ui/hud.gd` is placeholder text: feed name, clock, feed list, help, FPS. The sub-pixel container offset described above isn't done yet: borg feeds currently move in whole-pixel steps.
 - **Lighting:**
   - Station feeds: `DirectionalLight3D` + room `OmniLight3D`s. Only a few lights cast shadows. Static rooms can use `LightmapGI` later for quality.
   - Borg feeds: the borg carries a `SpotLight3D` headlamp. Areas outside its light are dark.

@@ -126,7 +126,8 @@ func _build_environment() -> void:
 	_environment.background_color = Palette.BACKGROUND
 	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	_environment.ambient_light_color = Palette.AMBIENT
-	_environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	# Linear = the art test's "Standard" view transform: palette colors stay true.
+	_environment.tonemap_mode = Environment.TONE_MAPPER_LINEAR
 	var world_environment := WorldEnvironment.new()
 	world_environment.environment = _environment
 	add_child(world_environment)
@@ -145,7 +146,8 @@ func _build_room(room_id: StringName, camera_name: String, cells: Rect2i, with_c
 	var center := Vector3(cells.position.x + cells.size.x * 0.5, 0.0, cells.position.y + cells.size.y * 0.5)
 	var lamp := OmniLight3D.new()
 	lamp.position = center + Vector3(0.0, 2.3, 0.0)
-	lamp.omni_range = 6.0
+	lamp.omni_range = 9.0
+	lamp.omni_attenuation = 1.5
 	# Only the two main rooms cast shadows: shadowed lights are the expensive ones.
 	lamp.shadow_enabled = with_camera
 	add_child(lamp)
@@ -208,7 +210,7 @@ func _add_wall(from: Vector2, to: Vector2, front_of: Array[StringName]) -> void:
 func _build_furniture() -> void:
 	# Engineering: a console with a glowing screen against the back wall.
 	BoxBuilder.box(self, Vector3(1.2, 0.8, 0.5), Vector3(2.5, 0.4, 0.4), Palette.CONSOLE)
-	var screen := BoxBuilder.glow_box(self, Vector3(1.0, 0.45, 0.05), Vector3(2.5, 1.05, 0.3), Palette.SCREEN_GLOW, 2.0)
+	var screen := BoxBuilder.glow_box(self, Vector3(1.0, 0.45, 0.05), Vector3(2.5, 1.05, 0.3), Palette.SCREEN_GLOW, 0.8)
 	screen.rotation.x = deg_to_rad(-15.0)
 	# Medbay: a bed with a blue sheet.
 	BoxBuilder.box(self, Vector3(0.9, 0.45, 1.9), Vector3(8.6, 0.225, 1.25), Palette.BED)

@@ -13,4 +13,4 @@ var view_height: float = 7.0
 
 func _ready() -> void:
 	BoxBuilder.box(self, Vector3(0.22, 0.16, 0.3), Vector3.ZERO, Palette.CAMERA_BODY)
-	BoxBuilder.glow_box(self, Vector3(0.1, 0.08, 0.06), Vector3(0.0, 0.0, 0.17), Palette.CAMERA_LENS, 3.0)
+	BoxBuilder.glow_box(self, Vector3(0.1, 0.08, 0.06), Vector3(0.0, 0.0, 0.17), Palette.CAMERA_LENS, 1.0)

@@ -13,4 +13,4 @@ func build(module_color: Color) -> void:
 	BoxBuilder.box(self, Vector3(0.10, 0.30, 0.12), Vector3(-0.28, 0.45, 0.04), Palette.BORG_BODY)
 	BoxBuilder.box(self, Vector3(0.10, 0.30, 0.12), Vector3(0.28, 0.45, 0.04), Palette.BORG_BODY)
 	BoxBuilder.box(self, Vector3(0.30, 0.24, 0.28), Vector3(0.0, 0.79, 0.0), Palette.BORG_BODY)
-	BoxBuilder.glow_box(self, Vector3(0.20, 0.06, 0.04), Vector3(0.0, 0.81, 0.15), module_color, 4.0)
+	BoxBuilder.glow_box(self, Vector3(0.20, 0.06, 0.04), Vector3(0.0, 0.81, 0.15), module_color, 1.2)

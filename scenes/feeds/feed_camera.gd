@@ -22,6 +22,7 @@ func _ready() -> void:
 	near = 0.1
 	far = 200.0
 	_iso_basis = Basis.from_euler(Vector3(deg_to_rad(PITCH_DEGREES), deg_to_rad(YAW_DEGREES), 0.0))
+	add_child(OutlinePass.new())
 
 
 func _process(_delta: float) -> void:

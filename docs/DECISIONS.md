@@ -50,7 +50,16 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 **Decision:** M1 test controls (1–9, R, WASD, F3, F4) check physical key codes in code.
 **Why:** faster to iterate for a technical test. Move them into the Input Map (rebindable) when real controls are designed.
 
+### D-011: Linear tonemapping (2026-11-11)
+**Decision:** the 3D environment uses the Linear tonemapper, not Filmic.
+**Why:** the art test used Blender's "Standard" view transform. Filmic washed glowing parts out to white (a green door light looked white), so palette colors weren't what was approved.
+
+### D-012: 1-pixel outline on everything (2026-11-11)
+**Decision:** a depth-based post-process draws a 1-pixel outline in `Palette.OUTLINE` (the art test's sprite outline color) just outside every silhouette in the pixel view: crew, borgs, devices, furniture and walls.
+**Why:** the owner asked for outlines on everything. Based on depth jumps (threshold 0.25 m), so flat floors and walls don't get lines, but anything in front of something else does.
+
 ---
 
 ## Environment
 - Godot executable path on the owner's machine: *(Claude: fill this in once known)*
+- Cloud sessions: Claude can download the official Godot 4.6.2 Linux build (and the Windows export templates) into its scratchpad to run the headless checks and export `build/CUSTODIAN.exe`. The owner approved this on 2026-11-11.
