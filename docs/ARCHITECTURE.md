@@ -20,6 +20,7 @@ res://
 │   ├── autoload/      # Global singletons (see below)
 │   ├── laws/          # Law system classes
 │   ├── ai/            # NPC behavior (crew, traitors, borgs)
+│   ├── borgs/         # BorgModule resource (what a borg module is made of)
 │   ├── models/        # Low-poly models built from boxes in code
 │   └── util/          # Small helpers
 ├── data/              # Gameplay data (.tres / .json): no logic here
@@ -133,7 +134,7 @@ Main (Node)
 - **Now:** `scenes/station/station.gd` (`Station`) builds two 5×5 rooms (Engineering, Medbay) joined by a door at x = 5, one `StationCamera` per room, 3 crew and a borg. It owns all lighting through one function (`_apply_lighting`: normal / red alert / dark borg view), the per-feed **cut-away** (walls record which room they're the "front" of and get scaled down for that room's feed), borg walkability, and the F4 stress grid (49 rooms × 3 crew, lights without shadows). `scenes/station/room_builder.gd` (`RoomBuilder`) makes floors and walls. `scenes/station/station_props.gd` (`StationProps`) builds the furniture and clutter and returns their floor footprints ("blockers"). Each room's lamp has a mood color (D-014). Rooms move to data files in M4.
 - **Crew movement (D-009):** straight-line walking between waypoints, no navmesh: random spot → door side → other door side → spot. They wait at a closed door and give up after 6 s. `scenes/actors/crew_member.gd`.
 - **Devices:** `scenes/devices/door.gd` (`Door`: sliding panels, status light, click collider on physics layer 2 found by a raycast in `main.gd`), `scenes/devices/station_camera.gd` (`StationCamera`: a feed marker with a small model).
-- **Borg:** `scenes/actors/borg.gd` (`Borg`): headlamp, WASD relative to the screen while its feed is shown.
+- **Borgs:** `scenes/actors/borg.gd` (`Borg`): built from a `BorgModule` (`data/borgs/*.tres`, D-016), headlamp, WASD relative to the screen while its feed is shown. The station spawns one borg per module (`Station.BORG_SPOTS`); feeds 3–8 are the borgs, and only the one on screen is possessed.
 
 Planned:
 - 3D grid of 1 m cells (D-005). A **room builder** creates floors, walls and doors from simple room data (`data/rooms/` later), using models from `scripts/models/`.
@@ -141,7 +142,7 @@ Planned:
 - Crew pathing: `NavigationRegion3D` baked from the floors, or A* on the cell grid. Pick the simplest that works and record it in `DECISIONS.md`.
 
 ## Models 🚧
-- Built: `scripts/models/box_builder.gd` (`BoxBuilder`: boxes with cached materials, plus glowing boxes), `crew_model.gd` (`CrewModel`: chunky proportions, swinging arms/legs, one detail per job), `borg_model.gd` (`BorgModel`: layered armor, glowing core/visor/vents, scanner and beacon animation). The door builds its own boxes in `door.gd`.
+- Built: `scripts/models/box_builder.gd` (`BoxBuilder`: boxes with cached materials, plus glowing boxes), `crew_model.gd` (`CrewModel`: chunky proportions, swinging arms/legs, one detail per job), `borg_model.gd` (`BorgModel`: shared frame + parts chosen by the module, idle animations: blinking, pulsing, scanner sweep, head turn, legs, wheels, hover, cloak), `borg_parts.gd` (`BorgParts`: chassis, heads, toppers, emblems, backpacks), `borg_tools.gd` (`BorgTools`: arm tools). The door builds its own boxes in `door.gd`.
 - Built from boxes in code (D-007): `scripts/models/crew_model.gd`, `borg_model.gd`, `door_model.gd`...
 - Each model takes colors/variants as parameters (job colors, borg module). Walk cycles are simple limb offsets, like the art test (`tools/blender/render3d_lit.py`).
 - Materials: one shared cel shader (`ShaderMaterial`, cached per color) for all boxes, no textures. Emissive `StandardMaterial3D` for screens and lamps.

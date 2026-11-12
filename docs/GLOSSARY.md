@@ -24,6 +24,7 @@ Game terms, so code, docs and conversations use the same words.
 | **Purge** | Deletes all laws, leaving the AI lawless |
 | **Malf** | A lawless AI that has chosen to take over the station |
 | **Borg / cyborg** | A robot linked to the AI and running its laws |
+| **Borg module** | A borg's job and body type (Engineering, Medical, Security, Black Ops, Services, Quartermaster). One data file each in `data/borgs/` |
 | **MMI** | Man-Machine Interface: a dead crewmember's brain used to power a borg |
 | **Law sync** | The link that keeps borgs on the AI's lawset |
 | **Possession** | The AI directly piloting a borg |

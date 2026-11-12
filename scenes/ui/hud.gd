@@ -24,7 +24,8 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_feed_title = _label(Vector2(8, 6), 10, Palette.AI_OK)
-	_feed_list = _label(Vector2(8, 300), 8, Palette.TEXT)
+	_feed_list = _label(Vector2(8, 300), 7, Palette.TEXT)
+	_feed_list.add_theme_constant_override(&"line_spacing", -2)
 	_help = _label(Vector2(8, 22), 7, Palette.TEXT_DIM)
 	_help.text = "Click door: open/close   R: red alert   WASD: drive borg (its feed)   F3: FPS   F4: stress test   F6: style on/off"
 	_alert = _label(Vector2(500, 6), 10, Palette.AI_ROGUE)
@@ -60,7 +61,8 @@ func set_feeds(names: Array[String], current: int) -> void:
 		lines.append("%s [%d] %s" % [marker, i + 1, names[i]])
 	_feed_list.text = "\n".join(lines)
 	# Keep the list anchored to the bottom whatever its length.
-	_feed_list.position.y = 354.0 - _feed_list.get_line_height() * names.size()
+	_feed_list.reset_size()
+	_feed_list.position.y = 356.0 - _feed_list.get_minimum_size().y
 
 
 func set_red_alert(enabled: bool) -> void:

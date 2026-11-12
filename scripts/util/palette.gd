@@ -37,7 +37,8 @@ const CRATE_BAND := Color("4e3b22")
 const VENT := Color("2a2e35")
 const SIGN_DARK := Color("1c1c22")
 const CABINET := Color("c9d1d9")
-const MED_CROSS := Color("e5484d")
+## Green, not red: the red cross is a protected emblem (Geneva Conventions).
+const MED_CROSS := Color("2ea043")
 const IV_BAG := Color("9ad7ff")
 
 # --- Door status light ---
@@ -60,9 +61,8 @@ const VISOR := Color("11151c")
 const BOOTS := Color("1c1c22")
 
 # --- Borg module colors ---
-const BORG_SECURITY := Color("da3633")
-const BORG_MEDICAL := Color("4493f8")
-const BORG_ENGINEERING := Color("e3b341")
+# Module colors (engineering yellow, security red...) live in each module's
+# data file in data/borgs/, so a new module needs no code (D-016).
 const BORG_BODY := Color("6e7681")
 const BORG_PLATE := Color("b8c0ca")      # light armor plates
 const BORG_DARK := Color("2b2f36")       # joints, chassis, visor housing
@@ -70,6 +70,7 @@ const BORG_TRACKS := Color("1c1c22")
 const BORG_CORE := Color("9ad7ff")       # glowing power core
 const BORG_SCANNER := Color("ffffff")    # bright dot sweeping across the visor
 const BORG_BEACON := Color("f85149")     # blinking antenna tip
+const CLOAK := Color("0e1014")           # black ops stealth cloak
 
 # --- Light presets ---
 const LIGHT_NORMAL := Color("ffe0b0")

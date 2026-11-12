@@ -50,12 +50,12 @@ static func build_medbay(parent: Node3D) -> Array[Rect2]:
 	BoxBuilder.box(parent, Vector3(0.05, 1.3, 0.05), Vector3(7.85, 0.65, 0.7), Palette.PIPE)
 	BoxBuilder.glow_box(parent, Vector3(0.16, 0.22, 0.08), Vector3(7.85, 1.2, 0.76), Palette.IV_BAG, 0.6)
 
-	# Medicine cabinet with a red cross, against the back wall.
+	# Medicine cabinet with a green cross, against the back wall.
 	BoxBuilder.box(parent, Vector3(0.8, 1.1, 0.4), Vector3(6.4, 0.55, 0.3), Palette.CABINET)
 	BoxBuilder.box(parent, Vector3(0.02, 1.0, 0.02), Vector3(6.4, 0.55, 0.51), Palette.CABINET.darkened(0.3))
 	_cross(parent, Vector3(6.4, 0.85, 0.51), 0.3)
 
-	# Medbay sign: white plate with a red cross.
+	# Medbay sign: white plate with a green cross.
 	BoxBuilder.box(parent, Vector3(0.5, 0.5, 0.04), Vector3(9.45, 1.15, 0.12), Palette.CABINET)
 	_cross(parent, Vector3(9.45, 1.15, 0.15), 0.34)
 
@@ -87,7 +87,7 @@ static func _hazard_sign(parent: Node3D, center: Vector3) -> void:
 		bar.scale = Vector3(1.0, 0.75, 1.0)
 
 
-## A red cross facing +Z, `size` meters across.
+## A medical cross (green, see Palette.MED_CROSS) facing +Z, `size` meters across.
 static func _cross(parent: Node3D, center: Vector3, size: float) -> void:
 	BoxBuilder.box(parent, Vector3(size, size * 0.32, 0.03), center, Palette.MED_CROSS)
 	BoxBuilder.box(parent, Vector3(size * 0.32, size, 0.03), center, Palette.MED_CROSS)

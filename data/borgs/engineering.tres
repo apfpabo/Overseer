@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BorgModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/borgs/borg_module.gd" id="1_module"]
+
+[resource]
+script = ExtResource("1_module")
+id = &"engineering"
+display_name = "Engineering"
+code = "ENG"
+color = Color(0.8902, 0.702, 0.2549, 1)
+plate_color = Color(0.7216, 0.7529, 0.7922, 1)
+body_color = Color(0.4314, 0.4627, 0.5059, 1)
+eye_color = Color(0.8902, 0.702, 0.2549, 1)
+glow_color = Color(0.9725, 0.3176, 0.2863, 1)
+chassis = 0
+head = 0
+right_tool = 1
+left_tool = 2
+back = 1
+topper = 1
+emblem = 1
+size = Vector3(1, 1, 1)

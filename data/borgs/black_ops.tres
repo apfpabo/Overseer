@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BorgModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/borgs/borg_module.gd" id="1_module"]
+
+[resource]
+script = ExtResource("1_module")
+id = &"black_ops"
+display_name = "Black Ops"
+code = "OPS"
+color = Color(0.2235, 0.8275, 0.3255, 1)
+plate_color = Color(0.239, 0.259, 0.298, 1)
+body_color = Color(0.118, 0.13, 0.157, 1)
+shoulder_color = Color(0.165, 0.18, 0.21, 1)
+eye_color = Color(0.2235, 0.8275, 0.3255, 1)
+glow_color = Color(0.2235, 0.8275, 0.3255, 1)
+chassis = 2
+head = 5
+right_tool = 7
+left_tool = 2
+back = 5
+topper = 0
+emblem = 4
+size = Vector3(0.92, 1.18, 0.92)

@@ -1,7 +1,7 @@
 class_name Station
 extends Node3D
 ## The M1 test station: two rooms (Engineering, Medbay) joined by a sliding
-## door, one camera per room, three crew and a borg. Also owns lighting
+## door, one camera per room, three crew and six borgs (one per module). Also owns lighting
 ## (normal / red alert / borg night view), the cut-away walls and the stress test.
 
 signal feeds_changed
@@ -12,8 +12,19 @@ const STRESS_GRID := 7
 const STRESS_SPACING := 7
 const STRESS_ORIGIN := Vector2i(0, 9)
 
+## One borg per module file, placed in the test rooms (module id -> spot).
+const BORG_SPOTS: Dictionary = {
+	&"engineering": Vector3(2.2, 0.0, 3.1),
+	&"security": Vector3(3.9, 0.0, 3.9),
+	&"black_ops": Vector3(1.2, 0.0, 1.5),
+	&"medical": Vector3(7.0, 0.0, 1.7),
+	&"services": Vector3(8.6, 0.0, 3.7),
+	&"quartermaster": Vector3(6.5, 0.0, 4.1),
+}
+const BORG_DATA_DIR := "res://data/borgs/"
+
 var door: Door
-var borg: Borg
+var borgs: Array[Borg] = []
 var red_alert: bool = false
 
 ## Room id -> Rect2 on the floor (x, z).
@@ -40,7 +51,7 @@ func _ready() -> void:
 	_build_walls_and_door()
 	_build_furniture()
 	_spawn_crew()
-	_spawn_borg()
+	_spawn_borgs()
 	_apply_lighting()
 
 
@@ -247,13 +258,19 @@ func _make_crew(display_name: String, suit: Color, job: StringName) -> CrewMembe
 	return crew
 
 
-func _spawn_borg() -> void:
-	borg = Borg.new()
-	borg.setup(Palette.BORG_ENGINEERING)
-	borg.position = Vector3(6.5, 0.0, 4.0)
-	borg.rotation.y = PI
-	borg.walkable_check = is_walkable
-	add_child(borg)
+func _spawn_borgs() -> void:
+	for id: StringName in BORG_SPOTS:
+		var module := load(BORG_DATA_DIR + String(id) + ".tres") as BorgModule
+		if module == null:
+			push_error("Borg module missing: %s%s.tres" % [BORG_DATA_DIR, id])
+			continue
+		var borg := Borg.new()
+		borg.setup(module)
+		borg.position = BORG_SPOTS[id]
+		borg.rotation.y = PI * 0.25 # face the camera
+		borg.walkable_check = is_walkable
+		add_child(borg)
+		borgs.append(borg)
 
 
 ## One place decides every light's color and brightness from the current

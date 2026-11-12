@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BorgModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/borgs/borg_module.gd" id="1_module"]
+
+[resource]
+script = ExtResource("1_module")
+id = &"medical"
+display_name = "Medical"
+code = "MED"
+color = Color(0.2667, 0.5765, 0.9725, 1)
+plate_color = Color(0.902, 0.9294, 0.9529, 1)
+body_color = Color(0.6627, 0.7059, 0.7529, 1)
+eye_color = Color(0.6039, 0.8431, 1, 1)
+glow_color = Color(0.898, 0.2824, 0.302, 1)
+chassis = 1
+head = 1
+right_tool = 3
+left_tool = 4
+back = 2
+topper = 0
+emblem = 2
+size = Vector3(1, 1, 1)

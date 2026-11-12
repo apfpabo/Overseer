@@ -2,7 +2,7 @@ class_name CrewModel
 extends Node3D
 ## A crew member made of boxes (~1.2 m tall), facing +Z. Chunky, readable
 ## proportions: big head, short legs, blocky hands. The suit color shows the
-## job, and each job adds one detail (hard hat, helmet, red cross).
+## job, and each job adds one detail (hard hat, helmet, green cross).
 
 const HIP_HEIGHT := 0.38
 const SHOULDER_HEIGHT := 0.72

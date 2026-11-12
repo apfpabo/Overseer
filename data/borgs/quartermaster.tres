@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BorgModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/borgs/borg_module.gd" id="1_module"]
+
+[resource]
+script = ExtResource("1_module")
+id = &"quartermaster"
+display_name = "Quartermaster"
+code = "QM"
+color = Color(0.8235, 0.6, 0.1333, 1)
+plate_color = Color(0.6902, 0.5529, 0.3412, 1)
+body_color = Color(0.3608, 0.2902, 0.1961, 1)
+eye_color = Color(0.9412, 0.7059, 0.1608, 1)
+glow_color = Color(0.9412, 0.5333, 0.2431, 1)
+chassis = 3
+head = 4
+right_tool = 10
+left_tool = 0
+back = 0
+topper = 1
+emblem = 3
+size = Vector3(1.1, 0.95, 1.1)

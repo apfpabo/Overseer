@@ -1,14 +1,14 @@
 class_name Borg
 extends Node3D
-## A cyborg with a headlamp. While the player watches its feed they possess
-## it: WASD drives it, relative to the screen.
+## A cyborg with a headlamp, built from a BorgModule (data/borgs/). While the
+## player watches its feed they possess it: WASD drives it, relative to the screen.
 
 const SPEED := 2.2
 const TURN_SPEED := 10.0
 
-var display_name: String = "BORG-1"
+var display_name: String = "BORG"
 var possessed: bool = false
-var module_color: Color = Palette.BORG_ENGINEERING
+var module: BorgModule
 ## Callable(pos: Vector3) -> bool, provided by the station: can the borg's
 ## centre stand here? (The station leaves room for the borg's body.)
 var walkable_check: Callable
@@ -17,15 +17,17 @@ var screen_forward: Vector3 = Vector3(-1.0, 0.0, -1.0).normalized()
 var screen_right: Vector3 = Vector3(1.0, 0.0, -1.0).normalized()
 
 var _headlamp: SpotLight3D
+var _model: BorgModel
 
 
-func setup(color: Color) -> void:
-	module_color = color
-	var model := BorgModel.new()
-	add_child(model)
-	model.build(color)
+func setup(borg_module: BorgModule) -> void:
+	module = borg_module
+	display_name = "BORG-%s" % module.code
+	_model = BorgModel.new()
+	add_child(_model)
+	_model.build(module)
 	_headlamp = SpotLight3D.new()
-	_headlamp.position = Vector3(0.0, 0.94, 0.24)
+	_headlamp.position = Vector3(0.0, 0.94 * module.size.y, 0.24 * module.size.z)
 	# A SpotLight shines along -Z: turn it to face forward (+Z) and tilt it down.
 	_headlamp.rotation = Vector3(deg_to_rad(-22.0), PI, 0.0)
 	_headlamp.light_color = Palette.LIGHT_NORMAL
@@ -38,6 +40,7 @@ func setup(color: Color) -> void:
 
 func _process(delta: float) -> void:
 	if not possessed:
+		_model.set_motion(0.0)
 		return
 	var input := Vector2.ZERO
 	if Input.is_physical_key_pressed(KEY_W):
@@ -48,6 +51,7 @@ func _process(delta: float) -> void:
 		input.x += 1.0
 	if Input.is_physical_key_pressed(KEY_A):
 		input.x -= 1.0
+	_model.set_motion(0.0 if input == Vector2.ZERO else 1.0)
 	if input == Vector2.ZERO:
 		return
 	var direction: Vector3 = (screen_forward * input.y + screen_right * input.x).normalized()

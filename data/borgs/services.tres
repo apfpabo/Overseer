@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BorgModule" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/borgs/borg_module.gd" id="1_module"]
+
+[resource]
+script = ExtResource("1_module")
+id = &"services"
+display_name = "Services"
+code = "SRV"
+color = Color(0.1843, 0.749, 0.6471, 1)
+plate_color = Color(0.8471, 0.8706, 0.8941, 1)
+body_color = Color(0.5451, 0.5804, 0.6196, 1)
+eye_color = Color(0.1843, 0.749, 0.6471, 1)
+glow_color = Color(0.4353, 0.8275, 1, 1)
+chassis = 3
+head = 4
+right_tool = 9
+left_tool = 8
+back = 3
+topper = 1
+emblem = 1
+size = Vector3(0.95, 0.95, 0.95)

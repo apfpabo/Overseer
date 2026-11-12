@@ -16,7 +16,7 @@ var _hud: Hud
 var _feed_look: ShaderMaterial
 ## Stylized look (cel bands, highlights, camera finish). F6 compares with the plain look.
 var _stylized: bool = true
-## Each entry: { "name": String, "camera": StationCamera } or { "name": String, "borg": true }.
+## Each entry: { "name": String, "camera": StationCamera } or { "name": String, "borg": Borg }.
 var _feeds: Array[Dictionary] = []
 var _current_feed: int = 0
 var _cutaway_room: StringName = &""
@@ -35,8 +35,9 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	if _is_borg_feed(_current_feed):
-		var room: StringName = _station.room_at(_station.borg.position)
+	var borg: Borg = _borg_of(_current_feed)
+	if borg != null:
+		var room: StringName = _station.room_at(borg.position)
 		if room != &"" and room != _cutaway_room:
 			_cutaway_room = room
 			_station.set_cutaway(room)
@@ -123,17 +124,17 @@ func _build_ui() -> void:
 	_hud.show_rec = _stylized
 
 
-## Feed order: room cameras first, then the borg, then any extra cameras
+## Feed order: room cameras first, then every borg, then any extra cameras
 ## (the stress-test overview).
 func _rebuild_feeds() -> void:
 	_feeds.clear()
 	var cameras: Array[StationCamera] = _station.get_cameras()
-	for i in cameras.size():
-		if i == 2:
-			_feeds.append({ "name": "BORG-1  (possessed)", "borg": true })
+	for i in mini(2, cameras.size()):
 		_feeds.append({ "name": cameras[i].feed_name, "camera": cameras[i] })
-	if cameras.size() <= 2:
-		_feeds.append({ "name": "BORG-1  (possessed)", "borg": true })
+	for borg: Borg in _station.borgs:
+		_feeds.append({ "name": "%s  %s" % [borg.display_name, borg.module.display_name.to_upper()], "borg": borg })
+	for i in range(2, cameras.size()):
+		_feeds.append({ "name": cameras[i].feed_name, "camera": cameras[i] })
 
 
 func _on_feeds_changed() -> void:
@@ -144,14 +145,16 @@ func _on_feeds_changed() -> void:
 
 func _switch_feed(index: int, with_static: bool) -> void:
 	_current_feed = index
-	var borg_feed: bool = _is_borg_feed(index)
-	_station.borg.possessed = borg_feed
-	_station.set_borg_vision(borg_feed)
-	if borg_feed:
-		_camera.show_following(_station.borg, BORG_VIEW_HEIGHT)
-		_station.borg.screen_forward = _camera.screen_forward_on_floor()
-		_station.borg.screen_right = _camera.screen_right_on_floor()
-		_cutaway_room = _station.room_at(_station.borg.position)
+	var borg: Borg = _borg_of(index)
+	# Only the borg whose feed is shown is possessed.
+	for other: Borg in _station.borgs:
+		other.possessed = other == borg
+	_station.set_borg_vision(borg != null)
+	if borg != null:
+		_camera.show_following(borg, BORG_VIEW_HEIGHT)
+		borg.screen_forward = _camera.screen_forward_on_floor()
+		borg.screen_right = _camera.screen_right_on_floor()
+		_cutaway_room = _station.room_at(borg.position)
 		_station.set_cutaway(_cutaway_room)
 	else:
 		var cam: StationCamera = _feeds[index]["camera"]
@@ -162,7 +165,10 @@ func _switch_feed(index: int, with_static: bool) -> void:
 	for feed: Dictionary in _feeds:
 		names.append(feed["name"])
 	_hud.set_feeds(names, index)
-	FeedLook.set_tint(_feed_look, _station.borg.module_color, borg_feed)
+	if borg != null:
+		FeedLook.set_tint(_feed_look, borg.module.color, true)
+	else:
+		FeedLook.set_tint(_feed_look, Color.WHITE, false)
 	if with_static:
 		_static.play()
 
@@ -177,8 +183,11 @@ func _set_stylized(enabled: bool) -> void:
 		_hud.show_rec = enabled
 
 
-func _is_borg_feed(index: int) -> bool:
-	return index < _feeds.size() and _feeds[index].get("borg", false)
+## The borg shown by feed `index`, or null for a camera feed.
+func _borg_of(index: int) -> Borg:
+	if index >= _feeds.size():
+		return null
+	return _feeds[index].get("borg", null)
 
 
 ## Left click on the pixel view: find what's under the mouse and act on it.

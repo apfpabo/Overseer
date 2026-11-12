@@ -44,7 +44,7 @@ Observe (cameras, radio, sensors) → Receive orders from crew → Decide (compl
 - **Resources:** CPU (processing power), station power, Crew Trust (shown vaguely), Suspicion.
 
 ### Cyborgs
-- Modules: Security, Medical, Engineering, Mining, Janitor, Service.
+- Modules (owner's list, 2026-11-12): **Engineering, Medical, Security, Black Ops, Services, Quartermaster**. Services covers janitor and kitchen work (mop, tray); Quartermaster covers cargo (forklift). This replaces the earlier draft list (Mining, Janitor, Service). Each module is a data file in `data/borgs/` (D-016).
 - Built at Robotics with an **MMI** (a dead crewmember's brain, keeps personality fragments) or a positronic brain.
 - **Law-synced** to the AI. Can be given tasks, **possessed** (direct control, costs CPU), locked down, or desynced by hackers.
 

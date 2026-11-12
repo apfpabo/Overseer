@@ -72,13 +72,27 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 **Decision (owner asked for all four on the test):**
 - **Tinted outlines:** each outline pixel is a dark shade (30%) of the shape it surrounds instead of one flat color. F6 switches back to the flat outline.
 - **Room color moods:** each room's lamp has its own color (`Palette.LIGHT_ENGINEERING` warm amber, `Palette.LIGHT_MEDBAY` cool). Unlit areas fall to a deep blue ambient. Red alert overrides every room. Kept soft so job colors stay readable (a strong amber made the white medic suit look like skin).
-- **Chunky crew:** big head, short legs, blocky hands, plus one job detail: engineer hard hat, security helmet and visor, medic red cross. Job ids are `CrewModel.JOB_*` (move to `data/jobs/` later).
-- **Clutter:** `scenes/station/station_props.gd`. Engineering: pipes and valve, crates, floor vent, hazard sign. Medbay: medicine cabinet, IV stand, cross sign. Yellow/black stripes at the door. Furniture footprints block the borg, and crew don't pick spots inside them.
+- **Chunky crew:** big head, short legs, blocky hands, plus one job detail: engineer hard hat, security helmet and visor, medic green cross. Job ids are `CrewModel.JOB_*` (move to `data/jobs/` later).
+- **Clutter:** `scenes/station/station_props.gd`. Engineering: pipes and valve, crates, floor vent, hazard sign. Medbay: medicine cabinet, IV stand, cross sign (green). Yellow/black stripes at the door. Furniture footprints block the borg, and crew don't pick spots inside them.
 **Why:** the owner's request after seeing the stylized look.
 
 ### D-015: More advanced-looking borg (2026-11-12)
 **Decision:** `BorgModel` rebuilt: treads with glowing side strips, narrow waist and wide armored chest with a glowing power core, a backpack with glowing vents, shoulder plates in the module color, a tool arm (glowing tip) and a claw arm, a head on a neck with a glowing visor band, a bright scanner dot sweeping across it, side sensors, and an antenna with a blinking red beacon. Idle animation: the head slowly looks around and the core pulses.
 **Why:** the owner asked for the cyborg to look more advanced. The module color still marks its job.
+
+### D-016: Six borg modules, defined as data (2026-11-12)
+**Decision:** a borg's look comes from a `BorgModule` resource (`scripts/borgs/borg_module.gd`), one `.tres` per module in `data/borgs/`. It holds the name, short code, colors and which parts to use: chassis (treads / hover / reverse-knee legs / wheels), head (visor / dome / slit / single eye / twin eyes / hunter), right and left tool, backpack, topper (antenna / siren) and chest emblem. `BorgModel` assembles the parts from `scripts/models/borg_parts.gd` and `borg_tools.gd`. Module colors moved out of `palette.gd` into the data files.
+- Engineering: treads, visor, welder + claw, vents, antenna.
+- Medical: hover, dome head, syringe + scanner, fluid canister, **green** cross.
+- Security: bigger, slit eye with sweeping light, stun baton + riot shield, red/blue siren.
+- Black Ops: tall, reverse-knee legs, hunter helmet with three lenses in a V, energy blade + claw, shoulder cannon, torn stealth cloak, glowing seams. Revised once after the owner said it was the weakest: the first version was a plain dark box with one small eye.
+- Services: wheels, friendly blinking twin eyes, tray + mop, water bucket.
+- Quartermaster: wheels, twin eyes, forklift carrying a crate, hazard stripes.
+**Why:** the owner asked for one distinct cyborg per module. Data, not code, per CONVENTIONS ("a new borg module should be a new file in data/"): a new module that reuses existing parts needs no code.
+
+### D-017: Medical crosses are green (2026-11-12)
+**Decision:** every medical cross (medic uniform, Medbay cabinet and sign, Medical borg) uses `Palette.MED_CROSS`, a green.
+**Why:** the red cross on white is a protected emblem under the Geneva Conventions, and its use in games has been challenged. The owner flagged it. Green is the common substitute.
 
 ---
 
