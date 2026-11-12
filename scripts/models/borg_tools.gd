@@ -2,16 +2,15 @@ class_name BorgTools
 extends RefCounted
 ## Box builders for cyborg arm tools (BorgModule.Tool), facing +Z.
 ## `side` is -1 for the left arm, +1 for the right. Hands are at
-## (side * ARM_X, HAND_Y, HAND_Z), see BorgParts.
+## (side * model.arm_x, HAND_Y, HAND_Z), see BorgParts.
 
 const HAND_Y := BorgParts.HAND_Y
-const ARM_X := BorgParts.ARM_X
 
 
 # --- Tools (one per arm; `side` is -1 left, +1 right) ----------------------
 
 static func build(model: BorgModel, m: BorgModule, kind: BorgModule.Tool, side: float) -> void:
-	var x: float = side * ARM_X
+	var x: float = side * model.arm_x
 	match kind:
 		BorgModule.Tool.WELDER:
 			BoxBuilder.box(model, Vector3(0.07, 0.07, 0.14), Vector3(x, HAND_Y, 0.24), m.plate_color)
@@ -37,8 +36,11 @@ static func build(model: BorgModel, m: BorgModule, kind: BorgModule.Tool, side: 
 			BoxBuilder.box(model, Vector3(0.04, 0.04, 0.22), Vector3(x, HAND_Y, 0.38), m.body_color)
 			model.blink(BoxBuilder.glow_box(model, Vector3(0.06, 0.06, 0.06), Vector3(x, HAND_Y, 0.5), m.glow_color, 2.0), 0.35, 0.6, 0.0, 2.5, 0.8)
 		BorgModule.Tool.BLADE:
-			BoxBuilder.box(model, Vector3(0.07, 0.07, 0.08), Vector3(x, HAND_Y, 0.23), Palette.BORG_DARK)
-			BoxBuilder.glow_box(model, Vector3(0.02, 0.08, 0.42), Vector3(x, HAND_Y, 0.48), m.eye_color, 1.8)
+			# Wrist blade: dark housing and a long, thin energy edge.
+			BoxBuilder.box(model, Vector3(0.06, 0.06, 0.1), Vector3(x, HAND_Y, 0.22), Palette.BORG_DARK)
+			# Angled down along the forearm, not held out like a sword.
+			var edge := BoxBuilder.glow_box(model, Vector3(0.02, 0.05, 0.36), Vector3(x, HAND_Y - 0.06, 0.42), m.eye_color, 1.4)
+			edge.rotation.x = deg_to_rad(18.0)
 		BorgModule.Tool.MOP:
 			# Pole from the hand down to the floor in front: tilted 50 degrees.
 			var pole := BoxBuilder.box(model, Vector3(0.03, 0.03, 0.58), Vector3(x, 0.25, 0.365), Palette.CRATE)

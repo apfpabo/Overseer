@@ -94,6 +94,10 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 **Decision:** every medical cross (medic uniform, Medbay cabinet and sign, Medical borg) uses `Palette.MED_CROSS`, a green.
 **Why:** the red cross on white is a protected emblem under the Geneva Conventions, and its use in games has been challenged. The owner flagged it. Green is the common substitute.
 
+### D-018: Black Ops: sleek, stealthy, four-eyed (2026-11-12)
+**Decision:** Black Ops is rebuilt around a quad-tube night-vision head (`Head.NVG`): four green lenses, inner tubes straight, outer tubes splayed, with a rare flicker. New `Frame.SLEEK` body (tapered chest, sloped shoulder blades, thin arms) instead of the chunky standard frame. Hunched stance (head low, forward, tilted down). Wrist blades on both arms, angled down. Lights cut back for stealth: only the four lenses stand out; dim chest V, no knee lights, no cloak trim, small muzzle light on a compact shoulder cannon. Longer, narrower torn cloak.
+**Why:** the owner wanted it sleeker, stealthier and more menacing, with 4 eyes like advanced NVGs. Replaces the first redesign's three-lens "hunter" head (D-016).
+
 ---
 
 ## Environment
