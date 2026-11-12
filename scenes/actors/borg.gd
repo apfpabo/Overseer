@@ -25,7 +25,7 @@ func setup(color: Color) -> void:
 	add_child(model)
 	model.build(color)
 	_headlamp = SpotLight3D.new()
-	_headlamp.position = Vector3(0.0, 0.85, 0.2)
+	_headlamp.position = Vector3(0.0, 0.94, 0.24)
 	# A SpotLight shines along -Z: turn it to face forward (+Z) and tilt it down.
 	_headlamp.rotation = Vector3(deg_to_rad(-22.0), PI, 0.0)
 	_headlamp.light_color = Palette.LIGHT_NORMAL

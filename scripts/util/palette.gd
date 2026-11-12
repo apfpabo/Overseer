@@ -64,7 +64,12 @@ const BORG_SECURITY := Color("da3633")
 const BORG_MEDICAL := Color("4493f8")
 const BORG_ENGINEERING := Color("e3b341")
 const BORG_BODY := Color("6e7681")
+const BORG_PLATE := Color("b8c0ca")      # light armor plates
+const BORG_DARK := Color("2b2f36")       # joints, chassis, visor housing
 const BORG_TRACKS := Color("1c1c22")
+const BORG_CORE := Color("9ad7ff")       # glowing power core
+const BORG_SCANNER := Color("ffffff")    # bright dot sweeping across the visor
+const BORG_BEACON := Color("f85149")     # blinking antenna tip
 
 # --- Light presets ---
 const LIGHT_NORMAL := Color("ffe0b0")

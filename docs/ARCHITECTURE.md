@@ -141,7 +141,7 @@ Planned:
 - Crew pathing: `NavigationRegion3D` baked from the floors, or A* on the cell grid. Pick the simplest that works and record it in `DECISIONS.md`.
 
 ## Models 🚧
-- Built: `scripts/models/box_builder.gd` (`BoxBuilder`: boxes with cached materials, plus glowing boxes), `crew_model.gd` (`CrewModel`: chunky proportions, swinging arms/legs, one detail per job), `borg_model.gd` (`BorgModel`). The door builds its own boxes in `door.gd`.
+- Built: `scripts/models/box_builder.gd` (`BoxBuilder`: boxes with cached materials, plus glowing boxes), `crew_model.gd` (`CrewModel`: chunky proportions, swinging arms/legs, one detail per job), `borg_model.gd` (`BorgModel`: layered armor, glowing core/visor/vents, scanner and beacon animation). The door builds its own boxes in `door.gd`.
 - Built from boxes in code (D-007): `scripts/models/crew_model.gd`, `borg_model.gd`, `door_model.gd`...
 - Each model takes colors/variants as parameters (job colors, borg module). Walk cycles are simple limb offsets, like the art test (`tools/blender/render3d_lit.py`).
 - Materials: one shared cel shader (`ShaderMaterial`, cached per color) for all boxes, no textures. Emissive `StandardMaterial3D` for screens and lamps.

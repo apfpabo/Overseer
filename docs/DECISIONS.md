@@ -76,6 +76,10 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 - **Clutter:** `scenes/station/station_props.gd`. Engineering: pipes and valve, crates, floor vent, hazard sign. Medbay: medicine cabinet, IV stand, cross sign. Yellow/black stripes at the door. Furniture footprints block the borg, and crew don't pick spots inside them.
 **Why:** the owner's request after seeing the stylized look.
 
+### D-015: More advanced-looking borg (2026-11-12)
+**Decision:** `BorgModel` rebuilt: treads with glowing side strips, narrow waist and wide armored chest with a glowing power core, a backpack with glowing vents, shoulder plates in the module color, a tool arm (glowing tip) and a claw arm, a head on a neck with a glowing visor band, a bright scanner dot sweeping across it, side sensors, and an antenna with a blinking red beacon. Idle animation: the head slowly looks around and the core pulses.
+**Why:** the owner asked for the cyborg to look more advanced. The module color still marks its job.
+
 ---
 
 ## Environment
