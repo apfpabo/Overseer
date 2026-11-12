@@ -13,6 +13,7 @@ const PIXEL_ROWS := 360
 
 ## Node being followed (a borg), or null for a fixed station view.
 var follow_target: Node3D
+var outline: OutlinePass
 
 var _iso_basis: Basis
 
@@ -22,7 +23,8 @@ func _ready() -> void:
 	near = 0.1
 	far = 200.0
 	_iso_basis = Basis.from_euler(Vector3(deg_to_rad(PITCH_DEGREES), deg_to_rad(YAW_DEGREES), 0.0))
-	add_child(OutlinePass.new())
+	outline = OutlinePass.new()
+	add_child(outline)
 
 
 func _process(_delta: float) -> void:

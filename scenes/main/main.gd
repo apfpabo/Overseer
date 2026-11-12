@@ -7,11 +7,15 @@ const PIXEL_SIZE := Vector2i(640, 360)
 const ROOM_VIEW_HEIGHT := 7.0
 const BORG_VIEW_HEIGHT := 6.0
 const RAY_LENGTH := 300.0
+const HIGHLIGHT_AMOUNT := 0.35
 
 var _station: Station
 var _camera: FeedCamera
 var _static: StaticOverlay
 var _hud: Hud
+var _feed_look: ShaderMaterial
+## Stylized look (cel bands, highlights, camera finish). F6 compares with the plain look.
+var _stylized: bool = true
 ## Each entry: { "name": String, "camera": StationCamera } or { "name": String, "borg": true }.
 var _feeds: Array[Dictionary] = []
 var _current_feed: int = 0
@@ -71,6 +75,8 @@ func _on_key(keycode: Key) -> void:
 		KEY_F4:
 			_hud.show_fps = true
 			_station.spawn_stress_rooms()
+		KEY_F6:
+			_set_stylized(not _stylized)
 
 
 func _build_pixel_view() -> void:
@@ -82,6 +88,8 @@ func _build_pixel_view() -> void:
 	pixel_view.stretch = false
 	pixel_view.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	pixel_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_feed_look = FeedLook.create_material()
+	pixel_view.material = _feed_look
 	add_child(pixel_view)
 	pixel_view.position = Vector2.ZERO
 	pixel_view.size = Vector2(PIXEL_SIZE)
@@ -101,6 +109,7 @@ func _build_pixel_view() -> void:
 	_camera.name = "FeedCamera"
 	viewport.add_child(_camera)
 	_camera.current = true
+	_set_stylized(_stylized)
 
 
 func _build_ui() -> void:
@@ -111,6 +120,7 @@ func _build_ui() -> void:
 	ui.add_child(_static)
 	_hud = Hud.new()
 	ui.add_child(_hud)
+	_hud.show_rec = _stylized
 
 
 ## Feed order: room cameras first, then the borg, then any extra cameras
@@ -152,8 +162,18 @@ func _switch_feed(index: int, with_static: bool) -> void:
 	for feed: Dictionary in _feeds:
 		names.append(feed["name"])
 	_hud.set_feeds(names, index)
+	FeedLook.set_tint(_feed_look, _station.borg.module_color, borg_feed)
 	if with_static:
 		_static.play()
+
+
+func _set_stylized(enabled: bool) -> void:
+	_stylized = enabled
+	BoxBuilder.set_cel_enabled(enabled)
+	_camera.outline.set_highlight(HIGHLIGHT_AMOUNT if enabled else 0.0)
+	FeedLook.set_enabled(_feed_look, enabled)
+	if _hud != null:
+		_hud.show_rec = enabled
 
 
 func _is_borg_feed(index: int) -> bool:

@@ -58,8 +58,18 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 **Decision:** a depth-based post-process draws a 1-pixel outline in `Palette.OUTLINE` (the art test's sprite outline color) just outside every silhouette in the pixel view: crew, borgs, devices, furniture and walls.
 **Why:** the owner asked for outlines on everything. Based on depth jumps (threshold 0.25 m), so flat floors and walls don't get lines, but anything in front of something else does.
 
+### D-013: Stylized look: cel bands, top highlights, camera-feed finish (2026-11-12)
+**Decision:** on top of the pixel view and outlines:
+- **Cel lighting:** every box uses one shared cel shader (`BoxBuilder.CEL_SHADER_CODE`). Light falls into 3 flat bands, so lamp pools are stepped rings.
+- **Top-edge highlight:** the outline pass also brightens the 1-pixel top edge of every shape (35% toward white).
+- **Camera-feed finish** (`scenes/feeds/feed_look.gd`): +25% saturation (like the art test), faint scanlines, vignette, light moving noise, a blinking REC light, and a module-color tint on borg feeds.
+- **F6** switches all of this off and on, for comparison.
+- Room lamps were brightened (energy 3.0, softer falloff) so the bands read.
+**Why:** the owner asked for a more stylized look and picked Claude's recommended set: banded "fewer colors" shading from the art test, cel lighting, edge highlights and the security-camera feel.
+**Not done yet (options offered):** per-object outline colors, room color moods, chunkier characters, room clutter.
+
 ---
 
 ## Environment
 - Godot executable path on the owner's machine: *(Claude: fill this in once known)*
-- Cloud sessions: Claude can download the official Godot 4.6.2 Linux build (and the Windows export templates) into its scratchpad to run the headless checks and export `build/CUSTODIAN.exe`. The owner approved this on 2026-11-11.
+- Cloud sessions: Claude can download the official Godot 4.6.2 Linux build (and the Windows export templates) into its scratchpad to run the headless checks and export `build/CUSTODIAN.exe`. The owner approved this on 2026-11-11. The Mesa software Vulkan driver (`mesa-vulkan-drivers`, "lavapipe") plus `xvfb-run` let Claude render real Forward+ screenshots (`--rendering-driver vulkan`).

@@ -7,12 +7,16 @@ extends Control
 const SHIFT_START_SECONDS := 8 * 3600
 
 var show_fps: bool = false
+## Blinking "REC" light, part of the camera-feed look.
+var show_rec: bool = true
 
 var _feed_title: Label
 var _feed_list: Label
 var _help: Label
 var _alert: Label
 var _fps: Label
+var _rec: Label
+var _rec_dot: ColorRect
 var _feed_title_text: String = ""
 
 
@@ -22,17 +26,28 @@ func _ready() -> void:
 	_feed_title = _label(Vector2(8, 6), 10, Palette.AI_OK)
 	_feed_list = _label(Vector2(8, 300), 8, Palette.TEXT)
 	_help = _label(Vector2(8, 22), 7, Palette.TEXT_DIM)
-	_help.text = "Click door: open/close   R: red alert   WASD: drive borg (its feed)   F3: FPS   F4: stress test"
-	_alert = _label(Vector2(520, 6), 10, Palette.AI_ROGUE)
+	_help.text = "Click door: open/close   R: red alert   WASD: drive borg (its feed)   F3: FPS   F4: stress test   F6: style on/off"
+	_alert = _label(Vector2(500, 6), 10, Palette.AI_ROGUE)
 	_alert.text = "RED ALERT"
 	_alert.visible = false
 	_fps = _label(Vector2(560, 22), 8, Palette.AI_WARN)
 	_fps.visible = false
+	_rec_dot = ColorRect.new()
+	_rec_dot.color = Palette.AI_ROGUE
+	_rec_dot.position = Vector2(594, 11)
+	_rec_dot.size = Vector2(5, 5)
+	_rec_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_rec_dot)
+	_rec = _label(Vector2(602, 6), 10, Palette.AI_ROGUE)
+	_rec.text = "REC"
 
 
 func _process(_delta: float) -> void:
 	_feed_title.text = "%s   %s" % [_feed_title_text, _clock_text()]
 	_fps.visible = show_fps
+	_rec.visible = show_rec
+	# Blink once a second, like a camera's recording light.
+	_rec_dot.visible = show_rec and fmod(Time.get_ticks_msec() / 1000.0, 1.0) < 0.6
 	if show_fps:
 		_fps.text = "%d FPS" % Engine.get_frames_per_second()
 

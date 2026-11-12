@@ -147,7 +147,7 @@ func _build_room(room_id: StringName, camera_name: String, cells: Rect2i, with_c
 	var lamp := OmniLight3D.new()
 	lamp.position = center + Vector3(0.0, 2.3, 0.0)
 	lamp.omni_range = 9.0
-	lamp.omni_attenuation = 1.5
+	lamp.omni_attenuation = 0.8
 	# Only the two main rooms cast shadows: shadowed lights are the expensive ones.
 	lamp.shadow_enabled = with_camera
 	add_child(lamp)
@@ -255,14 +255,14 @@ func _spawn_borg() -> void:
 ## state (normal or red alert, station view or borg view).
 func _apply_lighting() -> void:
 	var color: Color = Palette.LIGHT_ALERT if red_alert else Palette.LIGHT_NORMAL
-	var energy: float = 1.6
+	var energy: float = 3.0
 	if red_alert:
-		energy = 1.1 + 0.7 * sin(_alert_clock * 4.0)
+		energy = 2.2 + 1.0 * sin(_alert_clock * 4.0)
 	if _borg_vision:
 		energy *= 0.12
 	for lamp: OmniLight3D in _room_lights:
 		lamp.light_color = color
 		lamp.light_energy = energy
 	_sun.visible = not _borg_vision
-	_sun.light_energy = 0.15 if red_alert else 0.35
+	_sun.light_energy = 0.25 if red_alert else 0.6
 	_environment.ambient_light_energy = 0.15 if _borg_vision else 0.6

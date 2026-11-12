@@ -8,6 +8,7 @@ const TURN_SPEED := 10.0
 
 var display_name: String = "BORG-1"
 var possessed: bool = false
+var module_color: Color = Palette.BORG_ENGINEERING
 ## Callable(pos: Vector3) -> bool, provided by the station: can the borg's
 ## centre stand here? (The station leaves room for the borg's body.)
 var walkable_check: Callable
@@ -18,10 +19,11 @@ var screen_right: Vector3 = Vector3(1.0, 0.0, -1.0).normalized()
 var _headlamp: SpotLight3D
 
 
-func setup(module_color: Color) -> void:
+func setup(color: Color) -> void:
+	module_color = color
 	var model := BorgModel.new()
 	add_child(model)
-	model.build(module_color)
+	model.build(color)
 	_headlamp = SpotLight3D.new()
 	_headlamp.position = Vector3(0.0, 0.85, 0.2)
 	# A SpotLight shines along -Z: turn it to face forward (+Z) and tilt it down.
