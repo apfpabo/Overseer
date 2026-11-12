@@ -21,4 +21,5 @@ left_tool = 7
 back = 5
 topper = 0
 emblem = 4
+headlamp = false
 size = Vector3(0.95, 1.2, 0.95)

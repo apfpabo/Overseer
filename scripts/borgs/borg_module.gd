@@ -40,5 +40,8 @@ enum Emblem { NONE, CORE, CROSS, STRIPES, SEAMS }
 @export var back: Back = Back.NONE
 @export var topper: Topper = Topper.NONE
 @export var emblem: Emblem = Emblem.CORE
+## White headlamp for its feed. Off for borgs that light their own way
+## (Black Ops sees by the green glow of its night-vision lenses).
+@export var headlamp: bool = true
 ## Overall size: (width, height, depth) multipliers.
 @export var size: Vector3 = Vector3.ONE

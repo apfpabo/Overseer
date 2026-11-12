@@ -9,6 +9,8 @@ extends RefCounted
 const HAND_Y := 0.47
 const HAND_Z := 0.18
 const ARM_X := 0.33
+## Brightness of the Black Ops night-vision glow on the floor.
+const NVG_GLOW_ENERGY := 5.0
 
 
 # --- Chassis ---------------------------------------------------------------
@@ -130,6 +132,20 @@ static func head(model: BorgModel, m: BorgModule, h: Node3D) -> void:
 					model.blink(lens, 4.1, 0.96, 0.0, 2.4, 0.7)
 				else:
 					lens.material_override = lens_material
+			# Green glow the lenses throw on the floor ahead. It's on the head, so
+			# it drifts as the head looks around, and dims when the lenses flicker.
+			var glow := SpotLight3D.new()
+			glow.position = Vector3(0.0, 0.18, 0.3)
+			# A SpotLight shines along -Z: turn it forward (+Z) and tilt it down.
+			glow.rotation = Vector3(deg_to_rad(-38.0), PI, 0.0)
+			glow.light_color = m.eye_color
+			glow.light_energy = NVG_GLOW_ENERGY
+			glow.spot_range = 4.5
+			glow.spot_angle = 30.0
+			glow.spot_attenuation = 0.8
+			glow.shadow_enabled = true
+			h.add_child(glow)
+			model.link_light(glow, lens_material, 2.4)
 
 
 # --- Toppers (on the head node) --------------------------------------------

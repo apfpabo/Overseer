@@ -53,4 +53,4 @@ Add one short entry per session: date, what got done, anything left half-done.
 - **2026-11-12 (later):** Added tinted outlines, room color moods, chunkier crew with job details, and room clutter (D-014). New `.exe`. Next: owner feedback on the look, and FPS from F4.
 - **2026-11-12 (later):** More advanced borg model with idle animation (D-015). New `.exe`.
 - **2026-11-12 (later still):** Six borg modules as data (D-016), all in the test with their own feeds (keys 3–8, stress test moved to 9). Black Ops redesigned after owner feedback. Medical crosses made green (D-017). Feed list made compact. New `.exe`.
-- **2026-11-12 (later still):** Black Ops rebuilt: quad NVG eyes, sleek frame, hunched, twin blades, fewer lights (D-018). New `.exe`.
+- **2026-11-12 (later still):** Black Ops rebuilt: quad NVG eyes, sleek frame, hunched, twin blades, fewer lights (D-018). Green NVG glow on the floor, no white headlamp. New `.exe`.

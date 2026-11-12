@@ -24,6 +24,8 @@ var _head: Node3D
 ## Each: { "material", "period", "on_fraction", "phase", "on", "off" }.
 var _blinkers: Array[Dictionary] = []
 var _pulses: Array[StandardMaterial3D] = []
+## Lights that follow a glowing material's brightness: { "light", "material", "full", "energy" }.
+var _linked_lights: Array[Dictionary] = []
 var _time: float = 0.0
 var _motion: float = 0.0
 var _stride: float = 0.0
@@ -95,6 +97,12 @@ func blink(part: MeshInstance3D, period: float, on_fraction: float, phase: float
 	})
 
 
+## Makes `light` dim and brighten with `material` (e.g. a glow cast by lenses
+## follows their flicker). `full_emission` is the material's normal brightness.
+func link_light(light: Light3D, material: StandardMaterial3D, full_emission: float) -> void:
+	_linked_lights.append({ "light": light, "material": material, "full": full_emission, "energy": light.light_energy })
+
+
 ## Makes a glowing part slowly breathe brighter and dimmer.
 func pulse(part: MeshInstance3D) -> void:
 	_pulses.append(part.material_override)
@@ -108,6 +116,9 @@ func _process(delta: float) -> void:
 	for b: Dictionary in _blinkers:
 		var t: float = fmod(_time + b["phase"], b["period"]) / b["period"]
 		(b["material"] as StandardMaterial3D).emission_energy_multiplier = b["on"] if t < b["on_fraction"] else b["off"]
+	for link: Dictionary in _linked_lights:
+		var level: float = (link["material"] as StandardMaterial3D).emission_energy_multiplier / link["full"]
+		(link["light"] as Light3D).light_energy = link["energy"] * level
 	for mat: StandardMaterial3D in _pulses:
 		mat.emission_energy_multiplier = 1.0 + 0.5 * sin(_time * 2.5)
 	_stride += delta * 8.0 * _motion

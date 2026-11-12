@@ -26,6 +26,8 @@ func setup(borg_module: BorgModule) -> void:
 	_model = BorgModel.new()
 	add_child(_model)
 	_model.build(module)
+	if not module.headlamp:
+		return
 	_headlamp = SpotLight3D.new()
 	_headlamp.position = Vector3(0.0, 0.94 * module.size.y, 0.24 * module.size.z)
 	# A SpotLight shines along -Z: turn it to face forward (+Z) and tilt it down.
