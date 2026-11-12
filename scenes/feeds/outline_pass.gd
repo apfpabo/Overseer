@@ -3,6 +3,7 @@ extends MeshInstance3D
 ## Draws a 1-pixel dark outline around everything in the pixel view, like the
 ## sprite outline in the approved art test (tools/blender/pixel_lit.py), and a
 ## 1-pixel light highlight along the top edge of every shape (D-013).
+## Outlines are tinted: a dark shade of the shape they surround (D-014).
 ## It's a full-screen quad attached to the feed camera. Its shader reads the
 ## depth of each pixel: a pixel gets darkened when a neighbour is clearly
 ## closer to the camera, so the line sits just outside each silhouette.
@@ -15,6 +16,9 @@ uniform sampler2D depth_tex : hint_depth_texture, filter_nearest, repeat_disable
 uniform sampler2D screen_tex : hint_screen_texture, filter_nearest, repeat_disable;
 // How much the top-edge pixel is brightened (0 = no highlight).
 uniform float highlight = 0.35;
+// 1 = each outline is a dark shade of the object it surrounds; 0 = one flat color.
+uniform float tinted_outline = 1.0;
+uniform float outline_darkness = 0.3;
 uniform vec4 outline_color : source_color = vec4(0.07, 0.055, 0.1, 1.0);
 // Meters of depth jump that count as an edge. Big enough that sloped floors
 // and wall caps don't get lines, small enough that a person against a wall does.
@@ -45,9 +49,15 @@ void fragment() {
 	float right = view_depth(SCREEN_UV + vec2(pixel.x, 0.0), INV_PROJECTION_MATRIX);
 
 	// Outline: a neighbour is clearly closer, so this pixel is just outside a shape.
-	float jump = max(max(here - above, here - below), max(here - left, here - right));
-	if (jump > threshold) {
-		ALBEDO = outline_color.rgb;
+	// Remember which neighbour is closest: that's the shape being outlined.
+	float nearest = above;
+	vec2 nearest_uv = SCREEN_UV - vec2(0.0, pixel.y);
+	if (below < nearest) { nearest = below; nearest_uv = SCREEN_UV + vec2(0.0, pixel.y); }
+	if (left < nearest) { nearest = left; nearest_uv = SCREEN_UV - vec2(pixel.x, 0.0); }
+	if (right < nearest) { nearest = right; nearest_uv = SCREEN_UV + vec2(pixel.x, 0.0); }
+	if (here - nearest > threshold) {
+		vec3 shape_color = texture(screen_tex, nearest_uv).rgb * outline_darkness;
+		ALBEDO = mix(outline_color.rgb, shape_color, tinted_outline);
 	} else if (highlight > 0.0 && above - here > threshold) {
 		// Top edge: the pixel above is much farther away (space, or the floor behind).
 		ALBEDO = mix(texture(screen_tex, SCREEN_UV).rgb, vec3(1.0), highlight);
@@ -65,6 +75,11 @@ var _material: ShaderMaterial
 ## Top-edge highlight strength, 0 to turn it off.
 func set_highlight(amount: float) -> void:
 	_material.set_shader_parameter(&"highlight", amount)
+
+
+## true: each outline is a dark shade of its object; false: one flat dark color.
+func set_tinted(enabled: bool) -> void:
+	_material.set_shader_parameter(&"tinted_outline", 1.0 if enabled else 0.0)
 
 
 func _ready() -> void:

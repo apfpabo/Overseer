@@ -171,6 +171,7 @@ func _set_stylized(enabled: bool) -> void:
 	_stylized = enabled
 	BoxBuilder.set_cel_enabled(enabled)
 	_camera.outline.set_highlight(HIGHLIGHT_AMOUNT if enabled else 0.0)
+	_camera.outline.set_tinted(enabled)
 	FeedLook.set_enabled(_feed_look, enabled)
 	if _hud != null:
 		_hud.show_rec = enabled

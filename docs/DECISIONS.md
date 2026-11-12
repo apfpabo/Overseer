@@ -66,7 +66,15 @@ Format: `### D-NNN: title (date)`, followed by **Decision**, **Why**, and option
 - **F6** switches all of this off and on, for comparison.
 - Room lamps were brightened (energy 3.0, softer falloff) so the bands read.
 **Why:** the owner asked for a more stylized look and picked Claude's recommended set: banded "fewer colors" shading from the art test, cel lighting, edge highlights and the security-camera feel.
-**Not done yet (options offered):** per-object outline colors, room color moods, chunkier characters, room clutter.
+**Follow-up:** the other four options were done next (D-014).
+
+### D-014: Tinted outlines, room moods, chunky crew, room clutter (2026-11-12)
+**Decision (owner asked for all four on the test):**
+- **Tinted outlines:** each outline pixel is a dark shade (30%) of the shape it surrounds instead of one flat color. F6 switches back to the flat outline.
+- **Room color moods:** each room's lamp has its own color (`Palette.LIGHT_ENGINEERING` warm amber, `Palette.LIGHT_MEDBAY` cool). Unlit areas fall to a deep blue ambient. Red alert overrides every room. Kept soft so job colors stay readable (a strong amber made the white medic suit look like skin).
+- **Chunky crew:** big head, short legs, blocky hands, plus one job detail: engineer hard hat, security helmet and visor, medic red cross. Job ids are `CrewModel.JOB_*` (move to `data/jobs/` later).
+- **Clutter:** `scenes/station/station_props.gd`. Engineering: pipes and valve, crates, floor vent, hazard sign. Medbay: medicine cabinet, IV stand, cross sign. Yellow/black stripes at the door. Furniture footprints block the borg, and crew don't pick spots inside them.
+**Why:** the owner's request after seeing the stylized look.
 
 ---
 

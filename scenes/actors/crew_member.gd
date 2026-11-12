@@ -19,6 +19,8 @@ var rooms: Array[Rect2] = []
 var door: Door
 ## Where to stand in front of the door, one point per room: [side of room 0, side of room 1].
 var door_sides: Array[Vector3] = []
+## Furniture footprints (x, z) to avoid when picking where to walk.
+var blockers: Array[Rect2] = []
 
 var _model: CrewModel
 var _state: State = State.IDLE
@@ -30,12 +32,13 @@ var _walk_phase: float = 0.0
 var _rng: RandomNumberGenerator
 
 
-## Builds the model. `suit` is the job color from Palette.
-func setup(suit: Color, rng: RandomNumberGenerator) -> void:
+## Builds the model. `suit` is the job color from Palette, `job` one of
+## the CrewModel.JOB_* constants.
+func setup(suit: Color, job: StringName, rng: RandomNumberGenerator) -> void:
 	_rng = rng
 	_model = CrewModel.new()
 	add_child(_model)
-	_model.build(suit)
+	_model.build(suit, job)
 	_timer = _rng.randf_range(0.2, 2.0)
 
 
@@ -112,9 +115,22 @@ func _room_index_at(pos: Vector3) -> int:
 	return -1
 
 
+## A random spot in `room`, away from the walls and not inside furniture.
 func _random_point_in(room: Rect2) -> Vector3:
 	var inner: Rect2 = room.grow(-ROOM_MARGIN)
-	return Vector3(
-		_rng.randf_range(inner.position.x, inner.end.x),
-		0.0,
-		_rng.randf_range(inner.position.y, inner.end.y))
+	var point := Vector3.ZERO
+	for attempt in 10:
+		point = Vector3(
+			_rng.randf_range(inner.position.x, inner.end.x),
+			0.0,
+			_rng.randf_range(inner.position.y, inner.end.y))
+		if not _is_blocked(point):
+			break
+	return point
+
+
+func _is_blocked(point: Vector3) -> bool:
+	for blocker: Rect2 in blockers:
+		if blocker.grow(0.35).has_point(Vector2(point.x, point.z)):
+			return true
+	return false

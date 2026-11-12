@@ -21,6 +21,10 @@ var _rooms: Dictionary = {}
 ## Each entry: { "node": Node3D, "front_of": Array[StringName] }.
 var _walls: Array[Dictionary] = []
 var _room_lights: Array[OmniLight3D] = []
+## Each room's normal light color (its mood), same order as _room_lights.
+var _room_light_colors: Array[Color] = []
+## Furniture footprints (x, z) that crew and the borg walk around.
+var _blockers: Array[Rect2] = []
 var _cameras: Array[StationCamera] = []
 var _sun: DirectionalLight3D
 var _environment: Environment
@@ -31,8 +35,8 @@ var _stress_spawned: bool = false
 
 func _ready() -> void:
 	_build_environment()
-	_build_room(&"engineering", "ENGINEERING", Rect2i(0, 0, ROOM_SIZE, ROOM_SIZE), true)
-	_build_room(&"medbay", "MEDBAY", Rect2i(ROOM_SIZE, 0, ROOM_SIZE, ROOM_SIZE), true)
+	_build_room(&"engineering", "ENGINEERING", Rect2i(0, 0, ROOM_SIZE, ROOM_SIZE), true, Palette.LIGHT_ENGINEERING)
+	_build_room(&"medbay", "MEDBAY", Rect2i(ROOM_SIZE, 0, ROOM_SIZE, ROOM_SIZE), true, Palette.LIGHT_MEDBAY)
 	_build_walls_and_door()
 	_build_furniture()
 	_spawn_crew()
@@ -71,6 +75,9 @@ func room_at(pos: Vector3) -> StringName:
 ## lets it through the doorway while the door is open.
 func is_walkable(pos: Vector3) -> bool:
 	var point := Vector2(pos.x, pos.z)
+	for blocker: Rect2 in _blockers:
+		if blocker.grow(0.3).has_point(point):
+			return false
 	var clearance: float = RoomBuilder.WALL_THICKNESS * 0.5 + 0.3
 	for room_id: StringName in _rooms:
 		if (_rooms[room_id] as Rect2).grow(-clearance).has_point(point):
@@ -108,7 +115,9 @@ func spawn_stress_rooms() -> void:
 			_build_box_walls(room_id, cells)
 			var rect := Rect2(cells)
 			for i in 3:
-				var crew := _make_crew("Crew", [Palette.JOB_ENGINEERING, Palette.JOB_SECURITY, Palette.JOB_MEDICAL][i])
+				var suits: Array[Color] = [Palette.JOB_ENGINEERING, Palette.JOB_SECURITY, Palette.JOB_MEDICAL]
+				var jobs: Array[StringName] = [CrewModel.JOB_ENGINEERING, CrewModel.JOB_SECURITY, CrewModel.JOB_MEDICAL]
+				var crew := _make_crew("Crew", suits[i], jobs[i])
 				crew.rooms = [rect]
 				crew.position = Vector3(rect.get_center().x + i - 1.0, 0.0, rect.get_center().y)
 			count += 1
@@ -140,7 +149,7 @@ func _build_environment() -> void:
 
 
 ## Floor, ceiling light and (optionally) a station camera for one room.
-func _build_room(room_id: StringName, camera_name: String, cells: Rect2i, with_camera: bool) -> void:
+func _build_room(room_id: StringName, camera_name: String, cells: Rect2i, with_camera: bool, mood: Color = Palette.LIGHT_NORMAL) -> void:
 	_rooms[room_id] = Rect2(cells)
 	RoomBuilder.build_floor(self, cells)
 	var center := Vector3(cells.position.x + cells.size.x * 0.5, 0.0, cells.position.y + cells.size.y * 0.5)
@@ -152,6 +161,7 @@ func _build_room(room_id: StringName, camera_name: String, cells: Rect2i, with_c
 	lamp.shadow_enabled = with_camera
 	add_child(lamp)
 	_room_lights.append(lamp)
+	_room_light_colors.append(mood)
 	# Lamp fixture on the back wall, so the light has a visible source.
 	BoxBuilder.glow_box(self, Vector3(1.2, 0.08, 0.06), Vector3(center.x, 1.45, cells.position.y + 0.13), Palette.LAMP, 2.5)
 	if with_camera:
@@ -208,36 +218,31 @@ func _add_wall(from: Vector2, to: Vector2, front_of: Array[StringName]) -> void:
 
 
 func _build_furniture() -> void:
-	# Engineering: a console with a glowing screen against the back wall.
-	BoxBuilder.box(self, Vector3(1.2, 0.8, 0.5), Vector3(2.5, 0.4, 0.4), Palette.CONSOLE)
-	var screen := BoxBuilder.glow_box(self, Vector3(1.0, 0.45, 0.05), Vector3(2.5, 1.05, 0.3), Palette.SCREEN_GLOW, 0.8)
-	screen.rotation.x = deg_to_rad(-15.0)
-	# Medbay: a bed with a blue sheet.
-	BoxBuilder.box(self, Vector3(0.9, 0.45, 1.9), Vector3(8.6, 0.225, 1.25), Palette.BED)
-	BoxBuilder.box(self, Vector3(0.92, 0.06, 1.2), Vector3(8.6, 0.48, 1.55), Palette.BED_SHEET)
-	BoxBuilder.box(self, Vector3(0.6, 0.12, 0.35), Vector3(8.6, 0.51, 0.5), Palette.BED)
+	_blockers.append_array(StationProps.build_engineering(self))
+	_blockers.append_array(StationProps.build_medbay(self))
 
 
 func _spawn_crew() -> void:
 	var rooms: Array[Rect2] = [_rooms[&"engineering"], _rooms[&"medbay"]]
 	var door_sides: Array[Vector3] = [Vector3(4.3, 0.0, 2.5), Vector3(5.7, 0.0, 2.5)]
 	var roster: Array[Array] = [
-		["Engineer Vasquez", Palette.JOB_ENGINEERING, Vector3(1.5, 0.0, 3.0)],
-		["Officer Brandt", Palette.JOB_SECURITY, Vector3(3.5, 0.0, 1.5)],
-		["Doctor Okafor", Palette.JOB_MEDICAL, Vector3(7.5, 0.0, 3.5)],
+		["Engineer Vasquez", Palette.JOB_ENGINEERING, CrewModel.JOB_ENGINEERING, Vector3(1.5, 0.0, 3.0)],
+		["Officer Brandt", Palette.JOB_SECURITY, CrewModel.JOB_SECURITY, Vector3(3.5, 0.0, 2.0)],
+		["Doctor Okafor", Palette.JOB_MEDICAL, CrewModel.JOB_MEDICAL, Vector3(7.5, 0.0, 3.5)],
 	]
 	for entry: Array in roster:
-		var crew := _make_crew(entry[0], entry[1])
+		var crew := _make_crew(entry[0], entry[1], entry[2])
 		crew.rooms = rooms
+		crew.blockers = _blockers
 		crew.door = door
 		crew.door_sides = door_sides
-		crew.position = entry[2]
+		crew.position = entry[3]
 
 
-func _make_crew(display_name: String, suit: Color) -> CrewMember:
+func _make_crew(display_name: String, suit: Color, job: StringName) -> CrewMember:
 	var crew := CrewMember.new()
 	crew.display_name = display_name
-	crew.setup(suit, GameState.rng)
+	crew.setup(suit, job, GameState.rng)
 	add_child(crew)
 	return crew
 
@@ -254,15 +259,14 @@ func _spawn_borg() -> void:
 ## One place decides every light's color and brightness from the current
 ## state (normal or red alert, station view or borg view).
 func _apply_lighting() -> void:
-	var color: Color = Palette.LIGHT_ALERT if red_alert else Palette.LIGHT_NORMAL
 	var energy: float = 3.0
 	if red_alert:
 		energy = 2.2 + 1.0 * sin(_alert_clock * 4.0)
 	if _borg_vision:
 		energy *= 0.12
-	for lamp: OmniLight3D in _room_lights:
-		lamp.light_color = color
-		lamp.light_energy = energy
+	for i in _room_lights.size():
+		_room_lights[i].light_color = Palette.LIGHT_ALERT if red_alert else _room_light_colors[i]
+		_room_lights[i].light_energy = energy
 	_sun.visible = not _borg_vision
-	_sun.light_energy = 0.25 if red_alert else 0.6
-	_environment.ambient_light_energy = 0.15 if _borg_vision else 0.6
+	_sun.light_energy = 0.4 if red_alert else 1.0
+	_environment.ambient_light_energy = 0.15 if _borg_vision else 0.8

@@ -30,6 +30,15 @@ const BED_SHEET := Color("4493f8")
 const CAMERA_BODY := Color("2b2f36")
 const CAMERA_LENS := Color("f85149")
 const LAMP := Color("ffe0b0")
+const PIPE := Color("6b7480")
+const PIPE_VALVE := Color("da3633")
+const CRATE := Color("8a6a3e")
+const CRATE_BAND := Color("4e3b22")
+const VENT := Color("2a2e35")
+const SIGN_DARK := Color("1c1c22")
+const CABINET := Color("c9d1d9")
+const MED_CROSS := Color("e5484d")
+const IV_BAG := Color("9ad7ff")
 
 # --- Door status light ---
 const DOOR_OPEN := Color("3ddc84")
@@ -46,6 +55,8 @@ const JOB_SCIENCE := Color("8957e5")
 const SKIN := Color("e8b38c")
 const HAIR := Color("4a3024")
 const EYES := Color("08090b")
+const HARD_HAT := Color("f2c12e")
+const VISOR := Color("11151c")
 const BOOTS := Color("1c1c22")
 
 # --- Borg module colors ---
@@ -57,6 +68,8 @@ const BORG_TRACKS := Color("1c1c22")
 
 # --- Light presets ---
 const LIGHT_NORMAL := Color("ffe0b0")
+const LIGHT_ENGINEERING := Color("ffcf91")   # warm amber: machines, work light
+const LIGHT_MEDBAY := Color("c8ecff")        # cool, clinical
 const LIGHT_ALERT := Color("ff2a1a")
 const LIGHT_SUN := Color("9fb4d8")      # cool fill light through the station windows
-const AMBIENT := Color("3a4558")
+const AMBIENT := Color("2e3d63")      # deep blue: what unlit areas fall to
