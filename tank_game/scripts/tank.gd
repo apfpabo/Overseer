@@ -43,7 +43,7 @@ var _track_offset: float = 0.0
 var _dust_left: float = 0.0
 var _mark_distance: float = 0.0
 var _burn_left: float = 0.0
-var _fire_light: OmniLight3D = null
+var _fire_light: MeshInstance3D = null  # firelight glow on the ground
 var _fire: Node3D = null
 var _damage_smoke: CPUParticles3D = null
 
@@ -216,15 +216,12 @@ func become_wreck(burning: bool) -> void:
 		if child is HealthBar:
 			child.queue_free()
 	if _damage_smoke != null:
-		_damage_smoke.emitting = false
+		_damage_smoke.queue_free()  # the wreck fire's smoke takes over
+		_damage_smoke = null
 	if burning:
 		_burn_left = WRECK_BURN_TIME
 		_fire = FX.fire(self, Vector3(0.0, 0.6, 0.35), 1.0)
-		_fire_light = OmniLight3D.new()
-		_fire_light.light_color = Color(1.0, 0.5, 0.2)
-		_fire_light.omni_range = 4.0
-		_fire_light.position = Vector3(0.0, 1.2, 0.2)
-		add_child(_fire_light)
+		_fire_light = FX.glow(self, Vector3(0.0, 0.06, 0.2), Color(1.0, 0.5, 0.2), 2.2, 0.5)
 
 
 func _update_wreck(delta: float) -> void:
@@ -234,7 +231,8 @@ func _update_wreck(delta: float) -> void:
 	var strength: float = clampf(_burn_left / WRECK_BURN_TIME, 0.0, 1.0)
 	if _fire_light != null:
 		# Flickering firelight.
-		_fire_light.light_energy = (0.3 + strength) * randf_range(0.7, 1.5)
+		var flicker: float = (0.15 + strength * 0.4) * randf_range(0.7, 1.3)
+		(_fire_light.material_override as StandardMaterial3D).albedo_color.a = flicker
 	# Ammunition cooking off now and then while it burns.
 	if randf() < delta * 0.6 * strength:
 		FX.impact(get_parent(), global_position + Vector3(randf_range(-0.4, 0.4), 0.8, randf_range(-0.4, 0.4)), "metal")

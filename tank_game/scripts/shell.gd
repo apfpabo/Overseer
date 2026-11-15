@@ -49,16 +49,8 @@ func _ready() -> void:
 		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		glow.position.z = 0.3 + 0.45 * float(i)
 		add_child(glow)
-	var light := OmniLight3D.new()
-	light.light_color = color
-	light.light_energy = 1.2
-	light.omni_range = 2.2
-	add_child(light)
-	# Faint smoke trail left hanging in the air.
-	FX.emitter(self, Vector3(0.0, 0.0, 0.2), {"burst": false, "amount": 24, "life": 0.7, "spread": 10.0,
-		"vmin": 0.0, "vmax": 0.3, "gravity": FX.WIND * 0.5, "smin": 0.2, "smax": 0.35, "size": 1.0,
-		"grow": FX._curve(0.6, 0.0, 2.0),
-		"colors": [Color(0.8, 0.75, 0.68, 0.35), Color(0.7, 0.68, 0.64, 0.0)] as Array[Color]})
+	# Glow cast on the ground under the tracer (a fake light, see FX.glow).
+	FX.glow(self, Vector3(0.0, 0.06 - Tank.MUZZLE_HEIGHT, 0.0), color, 0.9, 0.35)
 	rotation.y = Tank.yaw_of(velocity)
 
 

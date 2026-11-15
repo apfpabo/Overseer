@@ -87,7 +87,11 @@ static func emitter(parent: Node, at: Vector3, o: Dictionary) -> CPUParticles3D:
 	p.one_shot = burst
 	p.explosiveness = 1.0 if burst else 0.0
 	p.randomness = o.get("random", 0.5)
-	p.lifetime_randomness = o.get("life_rand", 0.4)
+	# Every particle lives exactly `life`. Particles that are not alive (not yet
+	# released, or already faded) are drawn as black dots at the emitter by
+	# the renderer, so emitters must never have any: continuous ones start
+	# pre-filled, bursts are removed the moment their particles die.
+	p.lifetime_randomness = 0.0
 	p.direction = o.get("dir", Vector3.UP)
 	p.spread = o.get("spread", 45.0)
 	p.initial_velocity_min = o.get("vmin", 1.0)
@@ -122,7 +126,9 @@ static func emitter(parent: Node, at: Vector3, o: Dictionary) -> CPUParticles3D:
 	parent.add_child(p)
 	p.get_tree().create_timer(0.034, false, true).timeout.connect(p.show)
 	if burst:
-		_free_later(p, life * 1.5 + 0.3)
+		_free_later(p, life + 0.034)
+	else:
+		p.preprocess = life
 	return p
 
 
@@ -130,17 +136,35 @@ static func _free_later(node: Node, seconds: float) -> void:
 	node.get_tree().create_timer(seconds).timeout.connect(node.queue_free)
 
 
-## A short flash of light.
+## A soft patch of light drawn on the ground ("fake light"). Real lights are
+## avoided for effects: on some graphics cards, flashing or moving lights near
+## the ground leave black spots. `strength` 1.0 is a bright glow.
+static func glow(parent: Node, at: Vector3, color: Color, radius: float, strength: float) -> MeshInstance3D:
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.albedo_texture = _soft_texture()
+	m.albedo_color = Color(color, clampf(strength, 0.0, 1.0))
+	m.no_depth_test = false
+	var plane := PlaneMesh.new()
+	plane.size = Vector2.ONE * radius * 2.0
+	var g := MeshInstance3D.new()
+	g.mesh = plane
+	g.material_override = m
+	g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	g.position = at
+	parent.add_child(g)
+	return g
+
+
+## A short flash of light: a glow on the ground that fades out.
 static func light_flash(parent: Node, at: Vector3, color: Color, energy: float, reach: float, seconds: float) -> void:
-	var light := OmniLight3D.new()
-	light.light_color = color
-	light.light_energy = energy
-	light.omni_range = reach
-	light.position = at
-	parent.add_child(light)
-	var tween := light.create_tween()
-	tween.tween_property(light, "light_energy", 0.0, seconds).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
-	tween.tween_callback(light.queue_free)
+	var g := glow(parent, Vector3(at.x, 0.06, at.z), color, reach * 0.55, clampf(energy / 6.0, 0.3, 1.0))
+	var m: StandardMaterial3D = g.material_override
+	var tween := g.create_tween()
+	tween.tween_property(m, "albedo_color:a", 0.0, seconds).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tween.tween_callback(g.queue_free)
 
 
 ## A flat ring that races outward along the ground.
@@ -284,7 +308,7 @@ static func explosion(parent: Node, at: Vector3, size: float) -> void:
 		"colors": [Color(1.0, 0.95, 0.7, 1.0), Color(1.0, 0.55, 0.15, 1.0), Color(0.6, 0.15, 0.05, 0.0)] as Array[Color]})
 	debris(parent, at, Color(0.12, 0.11, 0.1), int(14 * s), 9.0 * s, 0.16)
 	# Thick black smoke that lingers and drifts.
-	smoke_puffs(parent, at + Vector3.UP * 0.5, int(18 * s), Color(0.1, 0.09, 0.08), 3.2, 2.8 * s)
+	smoke_puffs(parent, at + Vector3.UP * 0.5, int(14 * s), Color(0.2, 0.18, 0.16), 3.2, 1.8 * s)
 	# Sand thrown out along the ground, and the shockwave.
 	emitter(parent, Vector3(at.x, 0.15, at.z), {"amount": int(28 * s), "life": 1.4, "dir": Vector3.UP,
 		"spread": 88.0, "vmin": 3.0 * s, "vmax": 7.0 * s, "damping": 5.0, "gravity": WIND, "smin": 0.8,
@@ -295,12 +319,15 @@ static func explosion(parent: Node, at: Vector3, size: float) -> void:
 	FollowCamera.shake(0.7 * s)
 
 
-## Billowing smoke puffs (one burst).
+## Billowing smoke puffs (one burst). The smoke fades in a moment after it
+## appears, so it rolls up out of the fireball instead of covering it.
 static func smoke_puffs(parent: Node, at: Vector3, amount: int, color: Color, life: float, size: float) -> void:
-	emitter(parent, at, {"amount": amount, "life": life, "spread": 180.0, "vmin": 0.3, "vmax": 1.5,
-		"damping": 0.8, "gravity": WIND + Vector3.UP * 0.8, "smin": 0.6 * size, "smax": 1.0 * size,
-		"size": 1.0, "grow": _curve(0.4, 0.0, 2.0),
-		"colors": [Color(color, 0.0), Color(color, 0.75), Color(color.lightened(0.2), 0.4), Color(color, 0.0)] as Array[Color]})
+	# Each puff is faint and they start spread out, so overlapping puffs build
+	# up into a cloud instead of stacking into one solid dark ball.
+	emitter(parent, at, {"amount": amount, "life": life, "spread": 180.0, "vmin": 1.0, "vmax": 2.5 + size,
+		"damping": 1.5, "gravity": WIND + Vector3.UP * 0.8, "smin": 0.5 * size, "smax": 0.9 * size,
+		"box": Vector3(0.5, 0.2, 0.5) * size, "size": 1.0, "grow": _curve(0.4, 0.0, 2.0),
+		"colors": [Color(color, 0.0), Color(color, 0.0), Color(color, 0.3), Color(color.lightened(0.25), 0.16), Color(color.lightened(0.3), 0.0)] as Array[Color]})
 
 
 ## A low cloud of dust (collapsing walls, hits on concrete or sand).
@@ -330,27 +357,33 @@ static func fire(parent: Node3D, at: Vector3, size: float) -> Node3D:
 		"smin": 0.28 * size, "smax": 0.5 * size, "size": 1.0, "kind": "add", "grow": _curve(0.8, 0.15, 0.2),
 		"colors": [Color(1.0, 0.85, 0.45, 0.0), Color(1.0, 0.65, 0.25, 0.6), Color(0.95, 0.32, 0.06, 0.45), Color(0.5, 0.1, 0.02, 0.0)] as Array[Color]})
 	flames.name = "Flames"
-	var smoke := emitter(node, Vector3.UP * 0.6, {"burst": false, "amount": int(20 * size), "life": 3.0,
-		"spread": 15.0, "vmin": 0.8, "vmax": 1.6, "gravity": WIND * 1.4 + Vector3.UP * 0.6, "box": Vector3(0.25, 0.05, 0.25),
-		"smin": 0.7 * size, "smax": 1.1 * size, "size": 1.0, "grow": _curve(0.5, 0.0, 2.8),
-		"colors": [Color(0.08, 0.07, 0.06, 0.0), Color(0.1, 0.09, 0.08, 0.55), Color(0.22, 0.21, 0.2, 0.25), Color(0.3, 0.29, 0.28, 0.0)] as Array[Color]})
+	# Seen from straight above, smoke rising straight up would pile into one
+	# dark blob, so the plume is blown sideways by the wind into a long trail.
+	var smoke := emitter(node, Vector3.UP * 0.6, {"burst": false, "amount": int(22 * size), "life": 3.2,
+		"dir": (WIND.normalized() + Vector3.UP * 0.5).normalized(), "spread": 25.0, "vmin": 0.8, "vmax": 1.8,
+		"gravity": WIND * 2.2 + Vector3.UP * 0.2, "box": Vector3(0.25, 0.05, 0.25), "damping": 0.3,
+		"smin": 0.6 * size, "smax": 1.0 * size, "size": 1.0, "grow": _curve(0.5, 0.0, 3.0),
+		"colors": [Color(0.12, 0.11, 0.1, 0.0), Color(0.13, 0.12, 0.11, 0.22), Color(0.25, 0.24, 0.23, 0.12), Color(0.35, 0.34, 0.33, 0.0)] as Array[Color]})
 	smoke.name = "Smoke"
 	return node
 
 
-## Lets a fire from fire() die out and removes it afterwards.
+## Lets a fire from fire() die out (fades it away) and removes it afterwards.
+## (It keeps emitting while it fades: stopping an emitter leaves black dots.)
 static func stop_fire(node: Node3D) -> void:
 	if node == null or not is_instance_valid(node):
 		return
+	var tween := node.create_tween().set_parallel(true)
 	for child: Node in node.get_children():
 		if child is CPUParticles3D:
-			(child as CPUParticles3D).emitting = false
-	_free_later(node, 3.5)
+			tween.tween_property(child, "color:a", 0.0, 3.0)
+	tween.chain().tween_callback(node.queue_free)
 
 
 ## A continuous thin smoke trail (a badly damaged tank). Returns the emitter.
 static func damage_smoke(parent: Node3D, at: Vector3) -> CPUParticles3D:
-	return emitter(parent, at, {"burst": false, "amount": 14, "life": 1.8, "spread": 20.0, "vmin": 0.6,
-		"vmax": 1.2, "gravity": WIND + Vector3.UP * 0.4, "smin": 0.4, "smax": 0.7, "size": 1.0,
-		"grow": _curve(0.5, 0.0, 2.2),
-		"colors": [Color(0.12, 0.11, 0.1, 0.0), Color(0.12, 0.11, 0.1, 0.65), Color(0.25, 0.24, 0.23, 0.0)] as Array[Color]})
+	return emitter(parent, at, {"burst": false, "amount": 12, "life": 2.0,
+		"dir": (WIND.normalized() + Vector3.UP * 0.5).normalized(), "spread": 25.0, "vmin": 0.6, "vmax": 1.2,
+		"gravity": WIND * 2.0 + Vector3.UP * 0.2, "smin": 0.4, "smax": 0.7, "size": 1.0,
+		"grow": _curve(0.5, 0.0, 2.4),
+		"colors": [Color(0.14, 0.13, 0.12, 0.0), Color(0.16, 0.15, 0.14, 0.28), Color(0.28, 0.27, 0.26, 0.0)] as Array[Color]})
