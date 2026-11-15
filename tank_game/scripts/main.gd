@@ -1,18 +1,24 @@
-extends Node2D
+extends Node3D
 ## Builds the arena, spawns the player and waves of enemy tanks, and runs the HUD.
 
-const ARENA_SIZE: Vector2 = Vector2(1280.0, 720.0)
-const WALL_THICKNESS: float = 24.0
-const WALL_COLOR: Color = Color(0.36, 0.36, 0.4)
+const ARENA_SIZE: Vector2 = Vector2(40.0, 22.5)  # meters, X by Z
+const WALL_THICKNESS: float = 0.75
+const WALL_HEIGHT: float = 1.5
+const CRATE_SIZE: float = 1.0
+const WALL_COLOR: Color = Color(0.4, 0.4, 0.44)
 const CRATE_COLOR: Color = Color(0.62, 0.45, 0.25)
-const PLAYER_START: Vector2 = Vector2(120.0, 360.0)
-const ENEMY_SPAWNS: Array[Vector2] = [
-	Vector2(1160.0, 110.0), Vector2(1160.0, 360.0), Vector2(1160.0, 610.0),
-	Vector2(900.0, 90.0), Vector2(900.0, 630.0), Vector2(640.0, 90.0),
+const GROUND_COLOR: Color = Color(0.2, 0.25, 0.17)
+const PLAYER_START: Vector3 = Vector3(3.75, 0.0, 11.25)
+const ENEMY_SPAWNS: Array[Vector3] = [
+	Vector3(36.25, 0.0, 3.4), Vector3(36.25, 0.0, 11.25), Vector3(36.25, 0.0, 19.1),
+	Vector3(28.1, 0.0, 2.8), Vector3(28.1, 0.0, 19.7), Vector3(20.0, 0.0, 2.8),
 ]
 const WAVE_DELAY: float = 2.0
+const CAMERA_HEIGHT: float = 32.0
+const CAMERA_FOV: float = 40.0
 
 var player: PlayerTank = null
+var camera: Camera3D = null
 var wave: int = 0
 var score: int = 0
 var enemies_alive: int = 0
@@ -26,6 +32,7 @@ var _message_label: Label
 func _ready() -> void:
 	randomize()
 	_setup_input()
+	_build_world()
 	_build_hud()
 	_build_arena()
 	_spawn_player()
@@ -71,33 +78,75 @@ func _add_key_action(action: String, keys: Array[Key]) -> void:
 		InputMap.action_add_event(action, ev)
 
 
+func _build_world() -> void:
+	# Camera straight above the middle of the arena, looking down.
+	camera = Camera3D.new()
+	camera.fov = CAMERA_FOV
+	camera.position = Vector3(ARENA_SIZE.x * 0.5, CAMERA_HEIGHT, ARENA_SIZE.y * 0.5)
+	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	add_child(camera)
+	camera.make_current()
+
+	# Sun, tilted so walls and tanks cast visible shadows.
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55.0, 35.0, 0.0)
+	sun.light_energy = 0.95
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 80.0
+	add_child(sun)
+
+	var env := Environment.new()
+	env.background_mode = Environment.BG_COLOR
+	env.background_color = Color(0.08, 0.09, 0.08)
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.55, 0.6, 0.65)
+	env.ambient_light_energy = 0.35
+	var world_env := WorldEnvironment.new()
+	world_env.environment = env
+	add_child(world_env)
+
+	# Ground.
+	var ground_mesh := PlaneMesh.new()
+	ground_mesh.size = ARENA_SIZE + Vector2(6.0, 6.0)
+	var ground_mat := StandardMaterial3D.new()
+	ground_mat.albedo_color = GROUND_COLOR
+	ground_mat.roughness = 1.0
+	var ground := MeshInstance3D.new()
+	ground.mesh = ground_mesh
+	ground.material_override = ground_mat
+	ground.position = Vector3(ARENA_SIZE.x * 0.5, 0.0, ARENA_SIZE.y * 0.5)
+	add_child(ground)
+
+
 func _build_arena() -> void:
 	var t: float = WALL_THICKNESS
 	var w: float = ARENA_SIZE.x
 	var h: float = ARENA_SIZE.y
 	# Outer walls.
-	_wall(Vector2(w * 0.5, t * 0.5), Vector2(w, t))
-	_wall(Vector2(w * 0.5, h - t * 0.5), Vector2(w, t))
-	_wall(Vector2(t * 0.5, h * 0.5), Vector2(t, h))
-	_wall(Vector2(w - t * 0.5, h * 0.5), Vector2(t, h))
+	_wall(Vector3(w * 0.5, 0.0, t * 0.5), Vector2(w, t))
+	_wall(Vector3(w * 0.5, 0.0, h - t * 0.5), Vector2(w, t))
+	_wall(Vector3(t * 0.5, 0.0, h * 0.5), Vector2(t, h))
+	_wall(Vector3(w - t * 0.5, 0.0, h * 0.5), Vector2(t, h))
 	# Inner cover.
-	_wall(Vector2(400.0, 200.0), Vector2(32.0, 200.0))
-	_wall(Vector2(400.0, 560.0), Vector2(32.0, 140.0))
-	_wall(Vector2(640.0, 360.0), Vector2(180.0, 32.0))
-	_wall(Vector2(880.0, 220.0), Vector2(32.0, 160.0))
-	_wall(Vector2(880.0, 520.0), Vector2(32.0, 160.0))
+	_wall(Vector3(12.5, 0.0, 6.25), Vector2(1.0, 6.25))
+	_wall(Vector3(12.5, 0.0, 17.5), Vector2(1.0, 4.4))
+	_wall(Vector3(20.0, 0.0, 11.25), Vector2(5.6, 1.0))
+	_wall(Vector3(27.5, 0.0, 6.9), Vector2(1.0, 5.0))
+	_wall(Vector3(27.5, 0.0, 16.25), Vector2(1.0, 5.0))
 	# Breakable crates.
-	var crates: Array[Vector2] = [
-		Vector2(250.0, 140.0), Vector2(250.0, 580.0), Vector2(520.0, 470.0),
-		Vector2(552.0, 470.0), Vector2(760.0, 250.0), Vector2(760.0, 282.0),
-		Vector2(640.0, 600.0), Vector2(1020.0, 360.0), Vector2(1020.0, 392.0),
+	var crates: Array[Vector3] = [
+		Vector3(7.8, 0.0, 4.4), Vector3(7.8, 0.0, 18.1), Vector3(16.25, 0.0, 14.7),
+		Vector3(17.25, 0.0, 14.7), Vector3(23.75, 0.0, 7.8), Vector3(23.75, 0.0, 8.8),
+		Vector3(20.0, 0.0, 18.75), Vector3(31.9, 0.0, 11.25), Vector3(31.9, 0.0, 12.25),
 	]
-	for spot: Vector2 in crates:
-		add_child(Block.make(spot, Vector2(32.0, 32.0), CRATE_COLOR, true))
+	var crate_size := Vector3(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE)
+	for spot: Vector3 in crates:
+		add_child(Block.make(spot, crate_size, CRATE_COLOR, true))
 
 
-func _wall(at: Vector2, size: Vector2) -> void:
-	add_child(Block.make(at, size, WALL_COLOR, false))
+## Adds an unbreakable wall. `footprint` is its size on the ground (X by Z).
+func _wall(at: Vector3, footprint: Vector2) -> void:
+	add_child(Block.make(at, Vector3(footprint.x, WALL_HEIGHT, footprint.y), WALL_COLOR, false))
 
 
 func _build_hud() -> void:
@@ -127,8 +176,10 @@ func _spawn_player() -> void:
 	player.team = "player"
 	player.max_health = 8
 	player.position = PLAYER_START
+	player.rotation.y = -PI * 0.5  # face right
 	player.collision_layer = 2
 	player.collision_mask = 1 | 4
+	player.aim_camera = camera
 	player.died.connect(_on_player_died)
 	add_child(player)
 
@@ -140,25 +191,25 @@ func _start_wave() -> void:
 	if wave > 1 and player != null:
 		player.health = mini(player.health + 2, player.max_health)
 	var count: int = mini(wave + 1, ENEMY_SPAWNS.size())
-	var spots: Array[Vector2] = ENEMY_SPAWNS.duplicate()
+	var spots: Array[Vector3] = ENEMY_SPAWNS.duplicate()
 	spots.shuffle()
 	for i: int in count:
 		_spawn_enemy(spots[i])
 	_show_message("WAVE %d" % wave, 1.5)
 
 
-func _spawn_enemy(at: Vector2) -> void:
+func _spawn_enemy(at: Vector3) -> void:
 	var enemy := EnemyTank.new()
 	enemy.team = "enemy"
 	enemy.max_health = 2 + floori(wave / 3.0)
-	enemy.move_speed = 110.0 + 6.0 * float(mini(wave, 8))
+	enemy.move_speed = 3.4 + 0.19 * float(mini(wave, 8))
 	enemy.fire_cooldown = maxf(1.6 - 0.1 * float(wave), 0.8)
 	enemy.turret_turn_speed = 2.2
-	enemy.shell_speed = 420.0
-	enemy.hull_color = Color(0.55, 0.22, 0.2)
-	enemy.turret_color = Color(0.7, 0.32, 0.28)
+	enemy.shell_speed = 13.0
+	enemy.hull_color = Color(0.45, 0.17, 0.15)
+	enemy.turret_color = Color(0.53, 0.21, 0.18)
 	enemy.position = at
-	enemy.rotation = PI  # face left, toward the player's side
+	enemy.rotation.y = PI * 0.5  # face left, toward the player's side
 	enemy.collision_layer = 4
 	enemy.collision_mask = 1 | 2 | 4
 	enemy.target = player

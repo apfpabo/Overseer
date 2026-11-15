@@ -18,4 +18,8 @@ open this `tank_game` folder on its own in Godot.
 
 Enemy tanks (red) come in waves. Each wave has one more tank than the last.
 Clearing a wave repairs 2 armor. Grey walls are solid, wooden crates break after 3 hits.
-Everything is drawn with simple shapes in code, so there are no image files.
+The game is real 3D seen from a camera straight above. The tanks are detailed 3D models
+(tracks with moving treads, road wheels, sloped armor, cupola, hatches, machine gun,
+antennas, smoke launchers, fuel drums, a recoiling barrel), all built from boxes and
+cylinders in code, so there are no model or image files. Badly damaged tanks smoke,
+and destroyed tanks leave a scorch mark.
