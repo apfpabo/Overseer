@@ -15,7 +15,6 @@ const TREADS_PER_TRACK: int = 10
 const TREAD_RUN: float = TREAD_SPACING * TREADS_PER_TRACK
 const BARREL_REST_Z: float = -0.42
 const RECOIL_DISTANCE: float = 0.2
-const SMOKE_INTERVAL: float = 0.18
 const DUST_INTERVAL: float = 0.09
 const TRACK_MARK_STEP: float = 0.32
 const WRECK_BURN_TIME: float = 14.0
@@ -45,11 +44,12 @@ var _dust_left: float = 0.0
 var _mark_distance: float = 0.0
 var _burn_left: float = 0.0
 var _fire_light: OmniLight3D = null
+var _fire: Node3D = null
+var _damage_smoke: CPUParticles3D = null
 
 var _turret: Node3D
 var _barrel: Node3D
 var _recoil: float = 0.0
-var _smoke_left: float = 0.0
 var _hull_mat: StandardMaterial3D
 var _turret_mat: StandardMaterial3D
 var _trim_mat: StandardMaterial3D
@@ -102,13 +102,9 @@ func _physics_process(delta: float) -> void:
 	_hull_mat.albedo_color = Color.WHITE if flashing else hull_color
 	_turret_mat.albedo_color = Color.WHITE if flashing else turret_color
 	_update_treads()
-	# Badly damaged tanks trail smoke.
-	if health * 3 <= max_health:
-		_smoke_left -= delta
-		if _smoke_left <= 0.0:
-			_smoke_left = SMOKE_INTERVAL
-			var at: Vector3 = global_position + global_basis * Vector3(randf_range(-0.2, 0.2), 0.7, randf_range(0.3, 0.6))
-			Smoke.spawn(get_parent(), at, Color(0.13, 0.12, 0.11), 1.0)
+	# Badly damaged tanks trail smoke from the engine deck.
+	if health * 3 <= max_health and _damage_smoke == null:
+		_damage_smoke = FX.damage_smoke(self, Vector3(0.0, 0.7, 0.5))
 
 
 ## Drives the hull. `drive` is -1..1 (back/forward). `turn` is -1..1,
@@ -122,10 +118,21 @@ func drive_tank(drive: float, turn: float, delta: float) -> void:
 	var before: Vector3 = global_position
 	move_and_slide()
 	position.y = 0.0
+	_crush_obstacles()
 	_track_offset = fposmod(_track_offset + drive * speed * delta, TREAD_SPACING)
 	# Turning in place also moves the treads a little.
 	_track_offset = fposmod(_track_offset + absf(turn) * 0.3 * delta, TREAD_SPACING)
 	_leave_traces(global_position.distance_to(before), absf(turn), delta)
+
+
+## Driving into crates, sandbags, palms, poles or drums flattens them.
+func _crush_obstacles() -> void:
+	for i: int in get_slide_collision_count():
+		var other: Object = get_slide_collision(i).get_collider()
+		if other is Block:
+			var block: Block = other
+			if block.kind in [Block.Kind.CRATE, Block.Kind.TOPPLE, Block.Kind.SANDBAG, Block.Kind.EXPLOSIVE]:
+				block.crush(global_position)
 
 
 ## Dust kicked up behind the tracks, and track marks pressed into the sand.
@@ -169,9 +176,7 @@ func fire() -> void:
 	shell.velocity = dir * shell_speed
 	shell.position = global_position + dir * MUZZLE_DISTANCE + Vector3.UP * MUZZLE_HEIGHT
 	get_parent().add_child(shell)
-	Explosion.spawn(get_parent(), shell.position, 0.3, Color(1.0, 0.8, 0.4))
-	# Muzzle blast stirs up a little sand.
-	Smoke.spawn(get_parent(), shell.position + Vector3.DOWN * 0.4, SAND_DUST, 1.2)
+	FX.muzzle_blast(get_parent(), shell.position - dir * 0.15, dir)
 
 
 func take_damage(amount: int) -> void:
@@ -181,8 +186,7 @@ func take_damage(amount: int) -> void:
 	_flash_left = 0.12
 	health_changed.emit(health, max_health)
 	if health <= 0:
-		Explosion.spawn(get_parent(), global_position + Vector3.UP * 0.6, 1.6, Color(1.0, 0.5, 0.12))
-		Smoke.scorch(get_parent(), global_position)
+		FX.explosion(get_parent(), global_position + Vector3.UP * 0.4, 1.0)
 		died.emit(self)
 		become_wreck(true)
 
@@ -211,8 +215,11 @@ func become_wreck(burning: bool) -> void:
 	for child: Node in get_children():
 		if child is HealthBar:
 			child.queue_free()
+	if _damage_smoke != null:
+		_damage_smoke.emitting = false
 	if burning:
 		_burn_left = WRECK_BURN_TIME
+		_fire = FX.fire(self, Vector3(0.0, 0.6, 0.35), 1.0)
 		_fire_light = OmniLight3D.new()
 		_fire_light.light_color = Color(1.0, 0.5, 0.2)
 		_fire_light.omni_range = 4.0
@@ -226,17 +233,17 @@ func _update_wreck(delta: float) -> void:
 	_burn_left -= delta
 	var strength: float = clampf(_burn_left / WRECK_BURN_TIME, 0.0, 1.0)
 	if _fire_light != null:
-		_fire_light.light_energy = strength * randf_range(1.2, 2.4)
-		if _burn_left <= 0.0:
+		# Flickering firelight.
+		_fire_light.light_energy = (0.3 + strength) * randf_range(0.7, 1.5)
+	# Ammunition cooking off now and then while it burns.
+	if randf() < delta * 0.6 * strength:
+		FX.impact(get_parent(), global_position + Vector3(randf_range(-0.4, 0.4), 0.8, randf_range(-0.4, 0.4)), "metal")
+	if _burn_left <= 0.0:
+		FX.stop_fire(_fire)
+		_fire = null
+		if _fire_light != null:
 			_fire_light.queue_free()
 			_fire_light = null
-	_smoke_left -= delta
-	if _smoke_left <= 0.0:
-		_smoke_left = lerpf(0.5, 0.12, strength)
-		var at: Vector3 = global_position + Vector3(randf_range(-0.3, 0.3), 0.8, randf_range(-0.3, 0.3))
-		Smoke.spawn(get_parent(), at, Color(0.08, 0.075, 0.07), 1.0 + strength)
-		if randf() < strength * 0.5:
-			Explosion.spawn(get_parent(), at, 0.25, Color(1.0, 0.45, 0.1))
 
 
 # --- Model ---------------------------------------------------------------

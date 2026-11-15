@@ -9,6 +9,9 @@ const VIEW_FOV: float = 40.0
 const FOLLOW_SPEED: float = 6.0
 const EDGE_MARGIN: float = 2.0  # how far past the map edge the view may show
 
+static var _current: FollowCamera = null
+
+var _shake: float = 0.0
 var target: Node3D = null:
 	set(value):
 		target = value
@@ -18,7 +21,14 @@ var map_size: Vector2 = Vector2(40.0, 22.5)
 var _focus: Vector3 = Vector3.ZERO
 
 
+## Shakes the camera (explosions, cannon fire). 1.0 is a big jolt.
+static func shake(amount: float) -> void:
+	if _current != null and is_instance_valid(_current):
+		_current._shake = minf(_current._shake + amount, 1.2)
+
+
 func _ready() -> void:
+	_current = self
 	fov = VIEW_FOV
 	rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 	_place()
@@ -27,6 +37,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if target != null and is_instance_valid(target):
 		_focus = _focus.lerp(target.global_position, 1.0 - exp(-FOLLOW_SPEED * delta))
+	_shake = move_toward(_shake, 0.0, delta * 2.5)
 	_place()
 
 
@@ -43,4 +54,8 @@ func _place() -> void:
 	var x: float = clampf(_focus.x, view_w * 0.5 - EDGE_MARGIN, map_size.x - view_w * 0.5 + EDGE_MARGIN)
 	var z: float = clampf(_focus.z, view_h * 0.5 - EDGE_MARGIN, map_size.y - view_h * 0.5 + EDGE_MARGIN)
 	var px: float = ground_pixel_size()
+	# Shake: random jolt that fades out (squared, so small shakes stay subtle).
+	var jolt: float = _shake * _shake * 0.6
+	x += randf_range(-jolt, jolt)
+	z += randf_range(-jolt, jolt)
 	global_position = Vector3(snappedf(x, px), HEIGHT, snappedf(z, px))

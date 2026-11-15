@@ -7,6 +7,7 @@ extends RefCounted
 ##
 ## Heights matter: shells fly at about 0.7 m, so anything lower (sandbags,
 ## rubble) stops tanks but lets shells pass over it.
+## Most props can be destroyed (see Block.Kind); rocks and rubble heaps can't.
 
 const CONCRETE: Array[Color] = [
 	Color(0.46, 0.45, 0.43), Color(0.4, 0.39, 0.37), Color(0.5, 0.48, 0.45), Color(0.35, 0.34, 0.32),
@@ -47,11 +48,13 @@ static func ruin(parent: Node3D, center: Vector3, w: float, d: float, rng: Rando
 	_wall_line(node, Vector3(half.x, 0.0, -half.y), Vector3(half.x, 0.0, half.y), rng)
 	# A corner pillar that survived, taller than the rest.
 	var corner := Vector3(half.x * (1.0 if rng.randf() < 0.5 else -1.0), 0.0, half.y * (1.0 if rng.randf() < 0.5 else -1.0))
-	_wall_piece(node, corner, Vector3(0.5, rng.randf_range(2.6, 3.2), 0.5), 0.0, rng)
+	_wall_piece(node, corner, Vector3(0.5, rng.randf_range(2.6, 3.2), 0.5), 0.0, rng, 6)
 	# Collapsed roof slab leaning inside, and rubble heaps.
 	var slab := Block.make(Vector3(rng.randf_range(-0.4, 0.4) * w * 0.4, 0.0, rng.randf_range(-0.4, 0.4) * d * 0.4),
 		Vector3(w * 0.45, 0.22, d * 0.4), CONCRETE[3].darkened(0.2), false)
 	slab.rotation = Vector3(rng.randf_range(-0.18, 0.18), rng.randf() * PI, rng.randf_range(0.12, 0.24))
+	slab.kind = Block.Kind.CONCRETE
+	slab.health = 5
 	node.add_child(slab)
 	for i: int in 3:
 		rubble(node, Vector3(rng.randf_range(-0.3, 0.3) * w, 0.0, rng.randf_range(-0.3, 0.3) * d), 1.0, rng)
@@ -76,12 +79,10 @@ static func _wall_line(node: Node3D, a: Vector3, b: Vector3, rng: RandomNumberGe
 
 
 ## One standing chunk of wall with a jagged top and exposed rebar.
-static func _wall_piece(node: Node3D, at: Vector3, size: Vector3, yaw: float, rng: RandomNumberGenerator) -> void:
-	var block := Block.make(at, size, Color.WHITE, false)
-	block.show_mesh = false
-	block.rotation.y = yaw
-	node.add_child(block)
+static func _wall_piece(node: Node3D, at: Vector3, size: Vector3, yaw: float, rng: RandomNumberGenerator,
+		hp: int = 4) -> void:
 	var mat := _concrete(rng, rng.randf() < 0.35)
+	var block := Block.collider(node, at, size, yaw, Block.Kind.CONCRETE, hp, mat.albedo_color)
 	Shapes.box(block, size, Vector3(0.0, size.y * 0.5, 0.0), mat)
 	# Jagged broken top: a few smaller chunks of different heights.
 	for i: int in 2:
@@ -115,11 +116,7 @@ static func rubble(node: Node3D, at: Vector3, spread: float, rng: RandomNumberGe
 
 ## A line of sandbags, 3 layers high (about 0.55 m). Shells pass over it.
 static func sandbags(parent: Node3D, center: Vector3, length: float, yaw: float, rng: RandomNumberGenerator) -> void:
-	var node := Node3D.new()
-	node.position = center
-	node.rotation.y = yaw
-	parent.add_child(node)
-	Block.collider(parent, center, Vector3(length, 0.55, 0.55), yaw)
+	var node: Block = Block.collider(parent, center, Vector3(length, 0.55, 0.55), yaw, Block.Kind.SANDBAG, 4)
 	var bag_len: float = 0.5
 	for layer: int in 3:
 		var offset: float = bag_len * 0.5 if layer % 2 == 1 else 0.0
@@ -135,11 +132,8 @@ static func sandbags(parent: Node3D, center: Vector3, length: float, yaw: float,
 
 ## A concrete road barrier (about 0.9 m), chipped and stained.
 static func barrier(parent: Node3D, at: Vector3, yaw: float, rng: RandomNumberGenerator) -> void:
-	var block := Block.make(at, Vector3(1.8, 0.95, 0.6), Color.WHITE, false)
-	block.show_mesh = false
-	block.rotation.y = yaw
-	parent.add_child(block)
 	var mat := _concrete(rng)
+	var block := Block.collider(parent, at, Vector3(1.8, 0.95, 0.6), yaw, Block.Kind.CONCRETE, 5, mat.albedo_color)
 	Shapes.box(block, Vector3(1.8, 0.35, 0.6), Vector3(0.0, 0.175, 0.0), mat)
 	Shapes.box(block, Vector3(1.8, 0.62, 0.3), Vector3(0.0, 0.62, 0.0), mat)
 	Shapes.box(block, Vector3(0.3, 0.2, 0.32), Vector3(rng.randf_range(-0.6, 0.6), 0.9, 0.0), Shapes.mat(SOOT, 0.0, 1.0),
@@ -148,10 +142,7 @@ static func barrier(parent: Node3D, at: Vector3, yaw: float, rng: RandomNumberGe
 
 ## A burnt-out car: rusted body, collapsed cabin, no tires.
 static func car_wreck(parent: Node3D, at: Vector3, yaw: float, rng: RandomNumberGenerator) -> void:
-	var block := Block.make(at, Vector3(1.0, 1.0, 2.2), Color.WHITE, false)
-	block.show_mesh = false
-	block.rotation.y = yaw
-	parent.add_child(block)
+	var block := Block.collider(parent, at, Vector3(1.0, 1.0, 2.2), yaw, Block.Kind.METAL, 4)
 	var body := Shapes.mat(RUST.lerp(SOOT, rng.randf_range(0.2, 0.6)), 0.4, 0.8)
 	var dark := Shapes.mat(Color(0.08, 0.07, 0.06), 0.2, 0.9)
 	Shapes.box(block, Vector3(0.95, 0.45, 2.15), Vector3(0.0, 0.35, 0.0), body, Vector3(rng.randf_range(-0.06, 0.06), 0.0, 0.05))
@@ -166,22 +157,22 @@ static func car_wreck(parent: Node3D, at: Vector3, yaw: float, rng: RandomNumber
 
 ## Rusty fuel drum (one standing, sometimes one lying down beside it).
 static func drum(parent: Node3D, at: Vector3, rng: RandomNumberGenerator) -> void:
-	Block.collider(parent, at, Vector3(0.6, 0.9, 0.6))
+	var block := Block.collider(parent, at, Vector3(0.6, 0.9, 0.6), 0.0, Block.Kind.EXPLOSIVE, 1)
 	var colors: Array[Color] = [RUST, Color(0.3, 0.33, 0.24), Color(0.45, 0.32, 0.18)]
 	var mat := Shapes.mat(colors[rng.randi_range(0, colors.size() - 1)], 0.5, 0.75)
-	Shapes.cylinder(parent, 0.28, 0.28, 0.85, at + Vector3(0.0, 0.425, 0.0), mat)
-	Shapes.cylinder(parent, 0.29, 0.29, 0.04, at + Vector3(0.0, 0.3, 0.0), mat)
-	Shapes.cylinder(parent, 0.29, 0.29, 0.04, at + Vector3(0.0, 0.6, 0.0), mat)
-	Shapes.cylinder(parent, 0.05, 0.05, 0.03, at + Vector3(0.12, 0.86, 0.0), Shapes.mat(Color(0.1, 0.1, 0.1)))
+	Shapes.cylinder(block, 0.28, 0.28, 0.85, Vector3(0.0, 0.425, 0.0), mat)
+	Shapes.cylinder(block, 0.29, 0.29, 0.04, Vector3(0.0, 0.3, 0.0), mat)
+	Shapes.cylinder(block, 0.29, 0.29, 0.04, Vector3(0.0, 0.6, 0.0), mat)
+	Shapes.cylinder(block, 0.05, 0.05, 0.03, Vector3(0.12, 0.86, 0.0), Shapes.mat(Color(0.1, 0.1, 0.1)))
 
 
 ## A dead palm: a leaning trunk with drooping dry fronds.
 static func dead_palm(parent: Node3D, at: Vector3, rng: RandomNumberGenerator) -> void:
-	Block.collider(parent, at, Vector3(0.4, 2.0, 0.4))
+	var block := Block.collider(parent, at, Vector3(0.4, 2.0, 0.4), 0.0, Block.Kind.TOPPLE, 2)
 	var node := Node3D.new()
-	node.position = at
 	node.rotation = Vector3(rng.randf_range(-0.2, 0.2), rng.randf() * TAU, rng.randf_range(-0.2, 0.2))
-	parent.add_child(node)
+	block.add_child(node)
+	block.topple_node = node
 	var trunk := Shapes.mat(Color(0.36, 0.29, 0.21), 0.0, 1.0)
 	var frond := Shapes.mat(Color(0.42, 0.36, 0.22), 0.0, 1.0)
 	for i: int in 6:
@@ -199,15 +190,17 @@ static func dead_palm(parent: Node3D, at: Vector3, rng: RandomNumberGenerator) -
 static func pole(parent: Node3D, at: Vector3, fallen: bool, yaw: float) -> void:
 	var wood := Shapes.mat(Color(0.3, 0.24, 0.18), 0.0, 1.0)
 	var node := Node3D.new()
-	node.position = at
 	node.rotation.y = yaw
-	parent.add_child(node)
 	if fallen:
+		node.position = at
+		parent.add_child(node)
 		Block.collider(parent, at + Vector3(0.0, 0.0, 0.0), Vector3(0.3, 0.3, 0.3))
 		Shapes.cylinder(node, 0.09, 0.11, 4.5, Vector3(0.0, 0.1, -2.2), wood, Vector3(PI * 0.5, 0.0, 0.05), 8)
 		Shapes.box(node, Vector3(1.2, 0.08, 0.08), Vector3(0.0, 0.25, -4.1), wood, Vector3(0.0, 0.0, 1.2))
 	else:
-		Block.collider(parent, at, Vector3(0.35, 2.0, 0.35))
+		var block := Block.collider(parent, at, Vector3(0.35, 2.0, 0.35), 0.0, Block.Kind.TOPPLE, 2)
+		block.add_child(node)
+		block.topple_node = node
 		Shapes.cylinder(node, 0.09, 0.11, 4.5, Vector3(0.0, 2.25, 0.0), wood, Vector3(0.0, 0.0, 0.04), 8)
 		Shapes.box(node, Vector3(1.3, 0.09, 0.09), Vector3(0.08, 4.1, 0.0), wood)
 
