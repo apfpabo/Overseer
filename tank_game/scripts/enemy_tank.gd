@@ -5,7 +5,7 @@ extends Tank
 
 const PREFERRED_DISTANCE: float = 8.0
 const FIRE_RANGE: float = 20.0
-const WALL_MASK: int = 1
+const WALL_MASK: int = 1 | 8  # walls and wrecks block sight
 
 var target: Node3D = null
 var _stuck_time: float = 0.0
@@ -13,6 +13,9 @@ var _unstick_left: float = 0.0
 var _unstick_turn: float = 1.0
 var _strafe_sign: float = 1.0
 var _think_left: float = 0.0
+var _path := PackedVector3Array()
+var _path_index: int = 0
+var _repath_left: float = 0.0
 
 
 func _ready() -> void:
@@ -25,7 +28,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
-	if target == null or not is_instance_valid(target):
+	if is_wreck:
+		return
+	if target == null or not is_instance_valid(target) or (target is Tank and (target as Tank).is_wreck):
 		velocity = Vector3.ZERO
 		return
 	var to_target: Vector3 = target.global_position - global_position
@@ -47,7 +52,7 @@ func _physics_process(delta: float) -> void:
 		var wanted_dir: Vector3
 		var drive: float = 1.0
 		if not sees_target or distance > PREFERRED_DISTANCE + 1.25:
-			wanted_dir = toward
+			wanted_dir = _route_toward(target.global_position, toward, delta)
 		elif distance < PREFERRED_DISTANCE - 1.9:
 			wanted_dir = -toward
 		else:
@@ -75,6 +80,22 @@ func _physics_process(delta: float) -> void:
 	var aim_error: float = absf(wrapf(target_yaw - turret_yaw, -PI, PI))
 	if sees_target and aim_error < 0.12 and distance < FIRE_RANGE:
 		fire()
+
+
+## Direction to drive to reach `goal` around obstacles, using the nav grid.
+## Falls back to `direct` if there is no route.
+func _route_toward(goal: Vector3, direct: Vector3, delta: float) -> Vector3:
+	_repath_left -= delta
+	if _repath_left <= 0.0 or _path_index >= _path.size():
+		_repath_left = randf_range(0.5, 0.8)
+		_path = NavGrid.find_path(global_position, goal)
+		_path_index = 0
+	var flat_pos := Vector3(global_position.x, 0.0, global_position.z)
+	while _path_index < _path.size() and flat_pos.distance_to(_path[_path_index]) < 0.8:
+		_path_index += 1
+	if _path_index >= _path.size():
+		return direct
+	return (_path[_path_index] - flat_pos).normalized()
 
 
 func _has_line_of_sight(point: Vector3) -> bool:

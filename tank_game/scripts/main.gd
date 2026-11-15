@@ -1,24 +1,17 @@
 extends Node3D
-## Builds the arena, spawns the player and waves of enemy tanks, and runs the HUD.
+## Builds the desert map, spawns the player and waves of enemy tanks, and runs the HUD.
 
-const ARENA_SIZE: Vector2 = Vector2(40.0, 22.5)  # meters, X by Z
-const WALL_THICKNESS: float = 0.75
-const WALL_HEIGHT: float = 1.5
-const CRATE_SIZE: float = 1.0
-const WALL_COLOR: Color = Color(0.4, 0.4, 0.44)
-const CRATE_COLOR: Color = Color(0.62, 0.45, 0.25)
-const GROUND_COLOR: Color = Color(0.2, 0.25, 0.17)
-const PLAYER_START: Vector3 = Vector3(3.75, 0.0, 11.25)
+const PLAYER_START: Vector3 = Vector3(3.0, 0.0, 11.25)
 const ENEMY_SPAWNS: Array[Vector3] = [
-	Vector3(36.25, 0.0, 3.4), Vector3(36.25, 0.0, 11.25), Vector3(36.25, 0.0, 19.1),
-	Vector3(28.1, 0.0, 2.8), Vector3(28.1, 0.0, 19.7), Vector3(20.0, 0.0, 2.8),
+	Vector3(37.0, 0.0, 3.0), Vector3(37.0, 0.0, 8.2), Vector3(37.0, 0.0, 14.4),
+	Vector3(37.0, 0.0, 19.6), Vector3(34.6, 0.0, 11.25), Vector3(34.4, 0.0, 2.4),
 ]
 const WAVE_DELAY: float = 2.0
-const CAMERA_HEIGHT: float = 32.0
-const CAMERA_FOV: float = 40.0
+const ENEMY_HULL: Color = Color(0.25, 0.27, 0.31)
+const ENEMY_TURRET: Color = Color(0.29, 0.31, 0.35)
 
 var player: PlayerTank = null
-var camera: Camera3D = null
+var camera: FollowCamera = null
 var wave: int = 0
 var score: int = 0
 var enemies_alive: int = 0
@@ -34,7 +27,6 @@ func _ready() -> void:
 	_setup_input()
 	_build_world()
 	_build_hud()
-	_build_arena()
 	_spawn_player()
 	_start_wave()
 
@@ -79,94 +71,47 @@ func _add_key_action(action: String, keys: Array[Key]) -> void:
 
 
 func _build_world() -> void:
-	# Camera straight above the middle of the arena, looking down.
-	camera = Camera3D.new()
-	camera.fov = CAMERA_FOV
-	camera.position = Vector3(ARENA_SIZE.x * 0.5, CAMERA_HEIGHT, ARENA_SIZE.y * 0.5)
-	camera.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	add_child(DesertMap.new())
+	# Bird's-eye camera that follows the player (its target is set on spawn).
+	camera = FollowCamera.new()
+	camera.map_size = DesertMap.SIZE
 	add_child(camera)
 	camera.make_current()
-
-	# Sun, tilted so walls and tanks cast visible shadows.
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55.0, 35.0, 0.0)
-	sun.light_energy = 0.95
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 80.0
-	add_child(sun)
-
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = Color(0.08, 0.09, 0.08)
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.55, 0.6, 0.65)
-	env.ambient_light_energy = 0.35
-	var world_env := WorldEnvironment.new()
-	world_env.environment = env
-	add_child(world_env)
-
-	# Ground.
-	var ground_mesh := PlaneMesh.new()
-	ground_mesh.size = ARENA_SIZE + Vector2(6.0, 6.0)
-	var ground_mat := StandardMaterial3D.new()
-	ground_mat.albedo_color = GROUND_COLOR
-	ground_mat.roughness = 1.0
-	var ground := MeshInstance3D.new()
-	ground.mesh = ground_mesh
-	ground.material_override = ground_mat
-	ground.position = Vector3(ARENA_SIZE.x * 0.5, 0.0, ARENA_SIZE.y * 0.5)
-	add_child(ground)
-
-
-func _build_arena() -> void:
-	var t: float = WALL_THICKNESS
-	var w: float = ARENA_SIZE.x
-	var h: float = ARENA_SIZE.y
-	# Outer walls.
-	_wall(Vector3(w * 0.5, 0.0, t * 0.5), Vector2(w, t))
-	_wall(Vector3(w * 0.5, 0.0, h - t * 0.5), Vector2(w, t))
-	_wall(Vector3(t * 0.5, 0.0, h * 0.5), Vector2(t, h))
-	_wall(Vector3(w - t * 0.5, 0.0, h * 0.5), Vector2(t, h))
-	# Inner cover.
-	_wall(Vector3(12.5, 0.0, 6.25), Vector2(1.0, 6.25))
-	_wall(Vector3(12.5, 0.0, 17.5), Vector2(1.0, 4.4))
-	_wall(Vector3(20.0, 0.0, 11.25), Vector2(5.6, 1.0))
-	_wall(Vector3(27.5, 0.0, 6.9), Vector2(1.0, 5.0))
-	_wall(Vector3(27.5, 0.0, 16.25), Vector2(1.0, 5.0))
-	# Breakable crates.
-	var crates: Array[Vector3] = [
-		Vector3(7.8, 0.0, 4.4), Vector3(7.8, 0.0, 18.1), Vector3(16.25, 0.0, 14.7),
-		Vector3(17.25, 0.0, 14.7), Vector3(23.75, 0.0, 7.8), Vector3(23.75, 0.0, 8.8),
-		Vector3(20.0, 0.0, 18.75), Vector3(31.9, 0.0, 11.25), Vector3(31.9, 0.0, 12.25),
-	]
-	var crate_size := Vector3(CRATE_SIZE, CRATE_SIZE, CRATE_SIZE)
-	for spot: Vector3 in crates:
-		add_child(Block.make(spot, crate_size, CRATE_COLOR, true))
-
-
-## Adds an unbreakable wall. `footprint` is its size on the ground (X by Z).
-func _wall(at: Vector3, footprint: Vector2) -> void:
-	add_child(Block.make(at, Vector3(footprint.x, WALL_HEIGHT, footprint.y), WALL_COLOR, false))
+	add_child(ScreenGrit.new())
+	var nav := NavGrid.new()
+	add_child(nav)
+	# Scan the map for pathfinding once the physics world has all the walls in it.
+	# (Everything above is already set up; this part finishes one frame later.)
+	await get_tree().physics_frame
+	nav.key_points.assign([PLAYER_START] + ENEMY_SPAWNS)
+	nav.build(get_world_3d().direct_space_state, DesertMap.SIZE, PLAYER_START)
 
 
 func _build_hud() -> void:
 	var layer := CanvasLayer.new()
+	layer.layer = 10  # above the screen grit overlay
 	add_child(layer)
 	_hud_label = Label.new()
-	_hud_label.position = Vector2(36.0, 30.0)
-	_hud_label.add_theme_font_size_override("font_size", 20)
+	_hud_label.position = Vector2(12.0, 8.0)
+	_hud_label.add_theme_font_size_override("font_size", 11)
+	_hud_label.add_theme_color_override("font_color", Color(0.95, 0.88, 0.7))
 	_hud_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_hud_label.add_theme_constant_override("outline_size", 6)
+	_hud_label.add_theme_constant_override("outline_size", 3)
 	layer.add_child(_hud_label)
 	_message_label = Label.new()
 	_message_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_message_label.add_theme_font_size_override("font_size", 40)
+	_message_label.add_theme_font_size_override("font_size", 22)
+	_message_label.add_theme_color_override("font_color", Color(0.95, 0.88, 0.7))
 	_message_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_message_label.add_theme_constant_override("outline_size", 10)
+	_message_label.add_theme_constant_override("outline_size", 5)
 	_message_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(_message_label)
+	var markers := EnemyMarkers.new()
+	markers.camera = camera
+	markers.game = self
+	layer.add_child(markers)
 
 
 # --- Tanks ---------------------------------------------------------------
@@ -180,6 +125,7 @@ func _spawn_player() -> void:
 	player.collision_layer = 2
 	player.collision_mask = 1 | 4
 	player.aim_camera = camera
+	camera.target = player
 	player.died.connect(_on_player_died)
 	add_child(player)
 
@@ -206,8 +152,8 @@ func _spawn_enemy(at: Vector3) -> void:
 	enemy.fire_cooldown = maxf(1.6 - 0.1 * float(wave), 0.8)
 	enemy.turret_turn_speed = 2.2
 	enemy.shell_speed = 13.0
-	enemy.hull_color = Color(0.45, 0.17, 0.15)
-	enemy.turret_color = Color(0.53, 0.21, 0.18)
+	enemy.hull_color = ENEMY_HULL
+	enemy.turret_color = ENEMY_TURRET
 	enemy.position = at
 	enemy.rotation.y = PI * 0.5  # face left, toward the player's side
 	enemy.collision_layer = 4
@@ -239,7 +185,7 @@ func _update_hud() -> void:
 	var hp_text: String = "0"
 	if player != null and is_instance_valid(player):
 		hp_text = "%d / %d" % [player.health, player.max_health]
-	_hud_label.text = "Armor: %s     Wave: %d     Enemies: %d     Score: %d" % [
+	_hud_label.text = "ARMOR %s   WAVE %d   ENEMIES %d   SCORE %d" % [
 		hp_text, wave, enemies_alive, score]
 
 

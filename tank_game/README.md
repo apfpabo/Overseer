@@ -16,10 +16,20 @@ open this `tank_game` folder on its own in Godot.
 
 ## How it plays
 
-Enemy tanks (red) come in waves. Each wave has one more tank than the last.
-Clearing a wave repairs 2 armor. Grey walls are solid, wooden crates break after 3 hits.
-The game is real 3D seen from a camera straight above. The tanks are detailed 3D models
-(tracks with moving treads, road wheels, sloped armor, cupola, hatches, machine gun,
-antennas, smoke launchers, fuel drums, a recoiling barrel), all built from boxes and
-cylinders in code, so there are no model or image files. Badly damaged tanks smoke,
-and destroyed tanks leave a scorch mark.
+Enemy tanks come in waves on a desert battlefield full of bombed-out buildings.
+Each wave has one more tank than the last. Clearing a wave repairs 2 armor.
+Red arrows at the screen edge point to enemies you can't see.
+
+- Ruined walls, barriers, wrecked cars and burnt-out tanks block tanks and shells.
+- Sandbags and rubble are low: they stop tanks, but shells fly over them.
+- Wooden crates break after 3 hits.
+- Destroyed tanks stay on the map as burning wrecks you can use as cover.
+- Enemies find their way around obstacles (pathfinding on a half-meter grid).
+
+## Look
+
+"3D pixel art": real 3D models (built from boxes and cylinders in code, no model or
+image files) rendered at 640x360 and scaled up with sharp pixels, with dark outlines,
+a limited dithered color palette, grimy textures, a warm low sun with bluish
+shadows, light sand haze and blowing sand. The camera looks straight down and
+follows your tank.

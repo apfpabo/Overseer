@@ -9,6 +9,8 @@ var aim_camera: Camera3D = null
 
 func _physics_process(delta: float) -> void:
 	super(delta)
+	if is_wreck:
+		return
 	var drive: float = Input.get_axis("tank_back", "tank_forward")
 	var turn: float = Input.get_axis("tank_right", "tank_left")
 	# When reversing, flip steering so it feels like backing up a car.

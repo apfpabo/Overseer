@@ -14,7 +14,7 @@ var _done: bool = false
 
 func _ready() -> void:
 	collision_layer = 0
-	collision_mask = 1 | 2 | 4  # walls/crates, player, enemies
+	collision_mask = 1 | 2 | 4 | 8  # walls/crates, player, enemies, wrecks
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = 0.13
@@ -22,7 +22,7 @@ func _ready() -> void:
 	add_child(shape)
 	body_entered.connect(_on_body_entered)
 
-	var color: Color = Color(1.0, 0.95, 0.6) if team == "player" else Color(1.0, 0.5, 0.4)
+	var color: Color = Color(1.0, 0.9, 0.55) if team == "player" else Color(1.0, 0.45, 0.25)
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -68,5 +68,6 @@ func _on_body_entered(body: Node3D) -> void:
 		var block: Block = body
 		block.take_damage(damage)
 	_done = true
-	Explosion.spawn(get_parent(), global_position, 0.4, Color(1.0, 0.75, 0.3))
+	Explosion.spawn(get_parent(), global_position, 0.45, Color(1.0, 0.7, 0.3))
+	Smoke.spawn(get_parent(), global_position, Color(0.55, 0.48, 0.38), 1.1)
 	queue_free()
